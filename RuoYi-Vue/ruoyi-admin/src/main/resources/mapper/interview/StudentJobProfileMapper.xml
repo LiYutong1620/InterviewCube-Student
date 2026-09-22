@@ -28,6 +28,7 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
     <select id="selectStudentJobProfileList" parameterType="StudentJobProfile" resultMap="StudentJobProfileResult">
         <include refid="selectStudentJobProfileVo"/>
         <where>  
+            <if test="userId != null"> and user_id = #{userId}</if>
             <if test="industry != null  and industry != ''"> and industry = #{industry}</if>
             <if test="jobName != null  and jobName != ''"> and job_name like concat('%', #{jobName}, '%')</if>
             <if test="difficulty != null  and difficulty != ''"> and difficulty = #{difficulty}</if>
@@ -45,7 +46,7 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
     <insert id="insertStudentJobProfile" parameterType="StudentJobProfile" useGeneratedKeys="true" keyProperty="id">
         insert into student_job_profile
         <trim prefix="(" suffix=")" suffixOverrides=",">
-            <if test="userId != null">user_id,</if>
+            user_id,
             <if test="industry != null and industry != ''">industry,</if>
             <if test="jobName != null and jobName != ''">job_name,</if>
             <if test="difficulty != null and difficulty != ''">difficulty,</if>
@@ -60,7 +61,7 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
             <if test="remark != null">remark,</if>
          </trim>
         <trim prefix="values (" suffix=")" suffixOverrides=",">
-            <if test="userId != null">#{userId},</if>
+            #{userId},
             <if test="industry != null and industry != ''">#{industry},</if>
             <if test="jobName != null and jobName != ''">#{jobName},</if>
             <if test="difficulty != null and difficulty != ''">#{difficulty},</if>
@@ -79,7 +80,6 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
     <update id="updateStudentJobProfile" parameterType="StudentJobProfile">
         update student_job_profile
         <trim prefix="SET" suffixOverrides=",">
-            <if test="userId != null">user_id = #{userId},</if>
             <if test="industry != null and industry != ''">industry = #{industry},</if>
             <if test="jobName != null and jobName != ''">job_name = #{jobName},</if>
             <if test="difficulty != null and difficulty != ''">difficulty = #{difficulty},</if>

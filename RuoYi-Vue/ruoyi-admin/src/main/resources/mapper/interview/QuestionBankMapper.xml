@@ -53,7 +53,7 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
     <insert id="insertQuestionBank" parameterType="QuestionBank" useGeneratedKeys="true" keyProperty="id">
         insert into question_bank
         <trim prefix="(" suffix=")" suffixOverrides=",">
-            <if test="questionContent != null and questionContent != ''">question_content,</if>
+            question_content,
             <if test="questionType != null">question_type,</if>
             <if test="industry != null">industry,</if>
             <if test="jobName != null">job_name,</if>
@@ -73,7 +73,7 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
             <if test="remark != null">remark,</if>
          </trim>
         <trim prefix="values (" suffix=")" suffixOverrides=",">
-            <if test="questionContent != null and questionContent != ''">#{questionContent},</if>
+            #{questionContent},
             <if test="questionType != null">#{questionType},</if>
             <if test="industry != null">#{industry},</if>
             <if test="jobName != null">#{jobName},</if>

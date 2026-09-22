@@ -36,6 +36,7 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
     <select id="selectStudentProfileList" parameterType="StudentProfile" resultMap="StudentProfileResult">
         <include refid="selectStudentProfileVo"/>
         <where>  
+            <if test="userId != null"> and user_id = #{userId}</if>
             <if test="nickname != null  and nickname != ''"> and nickname like concat('%', #{nickname}, '%')</if>
             <if test="realName != null  and realName != ''"> and real_name like concat('%', #{realName}, '%')</if>
             <if test="gender != null  and gender != ''"> and gender = #{gender}</if>
@@ -57,7 +58,7 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
     <insert id="insertStudentProfile" parameterType="StudentProfile" useGeneratedKeys="true" keyProperty="id">
         insert into student_profile
         <trim prefix="(" suffix=")" suffixOverrides=",">
-            <if test="userId != null">user_id,</if>
+            user_id,
             <if test="nickname != null and nickname != ''">nickname,</if>
             <if test="avatar != null">avatar,</if>
             <if test="realName != null">real_name,</if>
@@ -80,7 +81,7 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
             <if test="remark != null">remark,</if>
          </trim>
         <trim prefix="values (" suffix=")" suffixOverrides=",">
-            <if test="userId != null">#{userId},</if>
+            #{userId},
             <if test="nickname != null and nickname != ''">#{nickname},</if>
             <if test="avatar != null">#{avatar},</if>
             <if test="realName != null">#{realName},</if>
@@ -107,7 +108,6 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
     <update id="updateStudentProfile" parameterType="StudentProfile">
         update student_profile
         <trim prefix="SET" suffixOverrides=",">
-            <if test="userId != null">user_id = #{userId},</if>
             <if test="nickname != null and nickname != ''">nickname = #{nickname},</if>
             <if test="avatar != null">avatar = #{avatar},</if>
             <if test="realName != null">real_name = #{realName},</if>

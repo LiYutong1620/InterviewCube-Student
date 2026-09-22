@@ -18,6 +18,7 @@ import com.ruoyi.common.core.domain.AjaxResult;
 import com.ruoyi.common.enums.BusinessType;
 import com.ruoyi.interview.domain.InterviewSession;
 import com.ruoyi.interview.service.IInterviewSessionService;
+import com.ruoyi.interview.utils.StudentDataScopeUtils;
 import com.ruoyi.common.utils.poi.ExcelUtil;
 import com.ruoyi.common.core.page.TableDataInfo;
 
@@ -41,6 +42,7 @@ public class InterviewSessionController extends BaseController
     @GetMapping("/list")
     public TableDataInfo list(InterviewSession interviewSession)
     {
+        StudentDataScopeUtils.scopeToCurrentUser(interviewSession);
         startPage();
         List<InterviewSession> list = interviewSessionService.selectInterviewSessionList(interviewSession);
         return getDataTable(list);
@@ -54,6 +56,7 @@ public class InterviewSessionController extends BaseController
     @PostMapping("/export")
     public void export(HttpServletResponse response, InterviewSession interviewSession)
     {
+        StudentDataScopeUtils.scopeToCurrentUser(interviewSession);
         List<InterviewSession> list = interviewSessionService.selectInterviewSessionList(interviewSession);
         ExcelUtil<InterviewSession> util = new ExcelUtil<InterviewSession>(InterviewSession.class);
         util.exportExcel(response, list, "模拟面试场次数据");
@@ -66,7 +69,7 @@ public class InterviewSessionController extends BaseController
     @GetMapping(value = "/{id}")
     public AjaxResult getInfo(@PathVariable("id") Long id)
     {
-        return success(interviewSessionService.selectInterviewSessionById(id));
+        return success(StudentDataScopeUtils.checkOwner(interviewSessionService.selectInterviewSessionById(id), "模拟面试场次"));
     }
 
     /**
@@ -77,6 +80,7 @@ public class InterviewSessionController extends BaseController
     @PostMapping
     public AjaxResult add(@RequestBody InterviewSession interviewSession)
     {
+        StudentDataScopeUtils.bindOwner(interviewSession);
         return toAjax(interviewSessionService.insertInterviewSession(interviewSession));
     }
 
@@ -88,6 +92,7 @@ public class InterviewSessionController extends BaseController
     @PutMapping
     public AjaxResult edit(@RequestBody InterviewSession interviewSession)
     {
+        StudentDataScopeUtils.checkOwner(interviewSessionService.selectInterviewSessionById(interviewSession.getId()), "模拟面试场次");
         return toAjax(interviewSessionService.updateInterviewSession(interviewSession));
     }
 
@@ -99,6 +104,10 @@ public class InterviewSessionController extends BaseController
 	@DeleteMapping("/{ids}")
     public AjaxResult remove(@PathVariable Long[] ids)
     {
+        for (Long id : ids)
+        {
+            StudentDataScopeUtils.checkOwner(interviewSessionService.selectInterviewSessionById(id), "模拟面试场次");
+        }
         return toAjax(interviewSessionService.deleteInterviewSessionByIds(ids));
     }
 }

@@ -18,6 +18,7 @@ import com.ruoyi.common.core.domain.AjaxResult;
 import com.ruoyi.common.enums.BusinessType;
 import com.ruoyi.interview.domain.StudentProfile;
 import com.ruoyi.interview.service.IStudentProfileService;
+import com.ruoyi.interview.utils.StudentDataScopeUtils;
 import com.ruoyi.common.utils.poi.ExcelUtil;
 import com.ruoyi.common.core.page.TableDataInfo;
 
@@ -41,6 +42,7 @@ public class StudentProfileController extends BaseController
     @GetMapping("/list")
     public TableDataInfo list(StudentProfile studentProfile)
     {
+        StudentDataScopeUtils.scopeToCurrentUser(studentProfile);
         startPage();
         List<StudentProfile> list = studentProfileService.selectStudentProfileList(studentProfile);
         return getDataTable(list);
@@ -54,6 +56,7 @@ public class StudentProfileController extends BaseController
     @PostMapping("/export")
     public void export(HttpServletResponse response, StudentProfile studentProfile)
     {
+        StudentDataScopeUtils.scopeToCurrentUser(studentProfile);
         List<StudentProfile> list = studentProfileService.selectStudentProfileList(studentProfile);
         ExcelUtil<StudentProfile> util = new ExcelUtil<StudentProfile>(StudentProfile.class);
         util.exportExcel(response, list, "学生档案数据");
@@ -66,7 +69,7 @@ public class StudentProfileController extends BaseController
     @GetMapping(value = "/{id}")
     public AjaxResult getInfo(@PathVariable("id") Long id)
     {
-        return success(studentProfileService.selectStudentProfileById(id));
+        return success(StudentDataScopeUtils.checkOwner(studentProfileService.selectStudentProfileById(id), "学生档案"));
     }
 
     /**
@@ -77,6 +80,7 @@ public class StudentProfileController extends BaseController
     @PostMapping
     public AjaxResult add(@RequestBody StudentProfile studentProfile)
     {
+        StudentDataScopeUtils.bindOwner(studentProfile);
         return toAjax(studentProfileService.insertStudentProfile(studentProfile));
     }
 
@@ -88,6 +92,7 @@ public class StudentProfileController extends BaseController
     @PutMapping
     public AjaxResult edit(@RequestBody StudentProfile studentProfile)
     {
+        StudentDataScopeUtils.checkOwner(studentProfileService.selectStudentProfileById(studentProfile.getId()), "学生档案");
         return toAjax(studentProfileService.updateStudentProfile(studentProfile));
     }
 
@@ -99,6 +104,10 @@ public class StudentProfileController extends BaseController
 	@DeleteMapping("/{ids}")
     public AjaxResult remove(@PathVariable Long[] ids)
     {
+        for (Long id : ids)
+        {
+            StudentDataScopeUtils.checkOwner(studentProfileService.selectStudentProfileById(id), "学生档案");
+        }
         return toAjax(studentProfileService.deleteStudentProfileByIds(ids));
     }
 }

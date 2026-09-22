@@ -36,6 +36,7 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
     <select id="selectInterviewQaList" parameterType="InterviewQa" resultMap="InterviewQaResult">
         <include refid="selectInterviewQaVo"/>
         <where>  
+            <if test="userId != null"> and user_id = #{userId}</if>
             <if test="sessionId != null "> and session_id = #{sessionId}</if>
             <if test="questionId != null "> and question_id = #{questionId}</if>
             <if test="questionContent != null  and questionContent != ''"> and question_content like concat('%', #{questionContent}, '%')</if>
@@ -56,7 +57,7 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
         <trim prefix="(" suffix=")" suffixOverrides=",">
             <if test="sessionId != null">session_id,</if>
             <if test="questionId != null">question_id,</if>
-            <if test="userId != null">user_id,</if>
+            user_id,
             <if test="questionContent != null">question_content,</if>
             <if test="answerContent != null">answer_content,</if>
             <if test="answerType != null">answer_type,</if>
@@ -79,7 +80,7 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
         <trim prefix="values (" suffix=")" suffixOverrides=",">
             <if test="sessionId != null">#{sessionId},</if>
             <if test="questionId != null">#{questionId},</if>
-            <if test="userId != null">#{userId},</if>
+            #{userId},
             <if test="questionContent != null">#{questionContent},</if>
             <if test="answerContent != null">#{answerContent},</if>
             <if test="answerType != null">#{answerType},</if>
@@ -106,7 +107,6 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
         <trim prefix="SET" suffixOverrides=",">
             <if test="sessionId != null">session_id = #{sessionId},</if>
             <if test="questionId != null">question_id = #{questionId},</if>
-            <if test="userId != null">user_id = #{userId},</if>
             <if test="questionContent != null">question_content = #{questionContent},</if>
             <if test="answerContent != null">answer_content = #{answerContent},</if>
             <if test="answerType != null">answer_type = #{answerType},</if>

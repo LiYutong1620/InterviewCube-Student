@@ -32,6 +32,7 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
     <select id="selectStudentResumeList" parameterType="StudentResume" resultMap="StudentResumeResult">
         <include refid="selectStudentResumeVo"/>
         <where>  
+            <if test="userId != null"> and user_id = #{userId}</if>
             <if test="resumeName != null  and resumeName != ''"> and resume_name like concat('%', #{resumeName}, '%')</if>
             <if test="fileType != null  and fileType != ''"> and file_type = #{fileType}</if>
             <if test="sourceType != null  and sourceType != ''"> and source_type = #{sourceType}</if>
@@ -49,7 +50,7 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
     <insert id="insertStudentResume" parameterType="StudentResume" useGeneratedKeys="true" keyProperty="id">
         insert into student_resume
         <trim prefix="(" suffix=")" suffixOverrides=",">
-            <if test="userId != null">user_id,</if>
+            user_id,
             <if test="resumeName != null and resumeName != ''">resume_name,</if>
             <if test="fileUrl != null and fileUrl != ''">file_url,</if>
             <if test="fileType != null">file_type,</if>
@@ -68,7 +69,7 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
             <if test="remark != null">remark,</if>
          </trim>
         <trim prefix="values (" suffix=")" suffixOverrides=",">
-            <if test="userId != null">#{userId},</if>
+            #{userId},
             <if test="resumeName != null and resumeName != ''">#{resumeName},</if>
             <if test="fileUrl != null and fileUrl != ''">#{fileUrl},</if>
             <if test="fileType != null">#{fileType},</if>
@@ -91,7 +92,6 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
     <update id="updateStudentResume" parameterType="StudentResume">
         update student_resume
         <trim prefix="SET" suffixOverrides=",">
-            <if test="userId != null">user_id = #{userId},</if>
             <if test="resumeName != null and resumeName != ''">resume_name = #{resumeName},</if>
             <if test="fileUrl != null and fileUrl != ''">file_url = #{fileUrl},</if>
             <if test="fileType != null">file_type = #{fileType},</if>

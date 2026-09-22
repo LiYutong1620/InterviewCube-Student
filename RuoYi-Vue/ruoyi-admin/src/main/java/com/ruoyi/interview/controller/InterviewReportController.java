@@ -18,6 +18,7 @@ import com.ruoyi.common.core.domain.AjaxResult;
 import com.ruoyi.common.enums.BusinessType;
 import com.ruoyi.interview.domain.InterviewReport;
 import com.ruoyi.interview.service.IInterviewReportService;
+import com.ruoyi.interview.utils.StudentDataScopeUtils;
 import com.ruoyi.common.utils.poi.ExcelUtil;
 import com.ruoyi.common.core.page.TableDataInfo;
 
@@ -41,6 +42,7 @@ public class InterviewReportController extends BaseController
     @GetMapping("/list")
     public TableDataInfo list(InterviewReport interviewReport)
     {
+        StudentDataScopeUtils.scopeToCurrentUser(interviewReport);
         startPage();
         List<InterviewReport> list = interviewReportService.selectInterviewReportList(interviewReport);
         return getDataTable(list);
@@ -54,6 +56,7 @@ public class InterviewReportController extends BaseController
     @PostMapping("/export")
     public void export(HttpServletResponse response, InterviewReport interviewReport)
     {
+        StudentDataScopeUtils.scopeToCurrentUser(interviewReport);
         List<InterviewReport> list = interviewReportService.selectInterviewReportList(interviewReport);
         ExcelUtil<InterviewReport> util = new ExcelUtil<InterviewReport>(InterviewReport.class);
         util.exportExcel(response, list, "面试复盘报告数据");
@@ -66,7 +69,7 @@ public class InterviewReportController extends BaseController
     @GetMapping(value = "/{id}")
     public AjaxResult getInfo(@PathVariable("id") Long id)
     {
-        return success(interviewReportService.selectInterviewReportById(id));
+        return success(StudentDataScopeUtils.checkOwner(interviewReportService.selectInterviewReportById(id), "面试复盘报告"));
     }
 
     /**
@@ -77,6 +80,7 @@ public class InterviewReportController extends BaseController
     @PostMapping
     public AjaxResult add(@RequestBody InterviewReport interviewReport)
     {
+        StudentDataScopeUtils.bindOwner(interviewReport);
         return toAjax(interviewReportService.insertInterviewReport(interviewReport));
     }
 
@@ -88,6 +92,7 @@ public class InterviewReportController extends BaseController
     @PutMapping
     public AjaxResult edit(@RequestBody InterviewReport interviewReport)
     {
+        StudentDataScopeUtils.checkOwner(interviewReportService.selectInterviewReportById(interviewReport.getId()), "面试复盘报告");
         return toAjax(interviewReportService.updateInterviewReport(interviewReport));
     }
 
@@ -99,6 +104,10 @@ public class InterviewReportController extends BaseController
 	@DeleteMapping("/{ids}")
     public AjaxResult remove(@PathVariable Long[] ids)
     {
+        for (Long id : ids)
+        {
+            StudentDataScopeUtils.checkOwner(interviewReportService.selectInterviewReportById(id), "面试复盘报告");
+        }
         return toAjax(interviewReportService.deleteInterviewReportByIds(ids));
     }
 }

@@ -18,6 +18,7 @@ import com.ruoyi.common.core.domain.AjaxResult;
 import com.ruoyi.common.enums.BusinessType;
 import com.ruoyi.interview.domain.InterviewQa;
 import com.ruoyi.interview.service.IInterviewQaService;
+import com.ruoyi.interview.utils.StudentDataScopeUtils;
 import com.ruoyi.common.utils.poi.ExcelUtil;
 import com.ruoyi.common.core.page.TableDataInfo;
 
@@ -41,6 +42,7 @@ public class InterviewQaController extends BaseController
     @GetMapping("/list")
     public TableDataInfo list(InterviewQa interviewQa)
     {
+        StudentDataScopeUtils.scopeToCurrentUser(interviewQa);
         startPage();
         List<InterviewQa> list = interviewQaService.selectInterviewQaList(interviewQa);
         return getDataTable(list);
@@ -54,6 +56,7 @@ public class InterviewQaController extends BaseController
     @PostMapping("/export")
     public void export(HttpServletResponse response, InterviewQa interviewQa)
     {
+        StudentDataScopeUtils.scopeToCurrentUser(interviewQa);
         List<InterviewQa> list = interviewQaService.selectInterviewQaList(interviewQa);
         ExcelUtil<InterviewQa> util = new ExcelUtil<InterviewQa>(InterviewQa.class);
         util.exportExcel(response, list, "面试问答数据");
@@ -66,7 +69,7 @@ public class InterviewQaController extends BaseController
     @GetMapping(value = "/{id}")
     public AjaxResult getInfo(@PathVariable("id") Long id)
     {
-        return success(interviewQaService.selectInterviewQaById(id));
+        return success(StudentDataScopeUtils.checkOwner(interviewQaService.selectInterviewQaById(id), "面试问答"));
     }
 
     /**
@@ -77,6 +80,7 @@ public class InterviewQaController extends BaseController
     @PostMapping
     public AjaxResult add(@RequestBody InterviewQa interviewQa)
     {
+        StudentDataScopeUtils.bindOwner(interviewQa);
         return toAjax(interviewQaService.insertInterviewQa(interviewQa));
     }
 
@@ -88,6 +92,7 @@ public class InterviewQaController extends BaseController
     @PutMapping
     public AjaxResult edit(@RequestBody InterviewQa interviewQa)
     {
+        StudentDataScopeUtils.checkOwner(interviewQaService.selectInterviewQaById(interviewQa.getId()), "面试问答");
         return toAjax(interviewQaService.updateInterviewQa(interviewQa));
     }
 
@@ -99,6 +104,10 @@ public class InterviewQaController extends BaseController
 	@DeleteMapping("/{ids}")
     public AjaxResult remove(@PathVariable Long[] ids)
     {
+        for (Long id : ids)
+        {
+            StudentDataScopeUtils.checkOwner(interviewQaService.selectInterviewQaById(id), "面试问答");
+        }
         return toAjax(interviewQaService.deleteInterviewQaByIds(ids));
     }
 }

@@ -38,6 +38,7 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
     <select id="selectInterviewReportList" parameterType="InterviewReport" resultMap="InterviewReportResult">
         <include refid="selectInterviewReportVo"/>
         <where>  
+            <if test="userId != null"> and user_id = #{userId}</if>
             <if test="reportNo != null  and reportNo != ''"> and report_no = #{reportNo}</if>
             <if test="sessionId != null "> and session_id = #{sessionId}</if>
             <if test="generateStatus != null  and generateStatus != ''"> and generate_status = #{generateStatus}</if>
@@ -55,7 +56,7 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
         <trim prefix="(" suffix=")" suffixOverrides=",">
             <if test="reportNo != null and reportNo != ''">report_no,</if>
             <if test="sessionId != null">session_id,</if>
-            <if test="userId != null">user_id,</if>
+            user_id,
             <if test="totalScore != null">total_score,</if>
             <if test="scoreCompleteness != null">score_completeness,</if>
             <if test="scoreLogic != null">score_logic,</if>
@@ -80,7 +81,7 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
         <trim prefix="values (" suffix=")" suffixOverrides=",">
             <if test="reportNo != null and reportNo != ''">#{reportNo},</if>
             <if test="sessionId != null">#{sessionId},</if>
-            <if test="userId != null">#{userId},</if>
+            #{userId},
             <if test="totalScore != null">#{totalScore},</if>
             <if test="scoreCompleteness != null">#{scoreCompleteness},</if>
             <if test="scoreLogic != null">#{scoreLogic},</if>
@@ -109,7 +110,6 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
         <trim prefix="SET" suffixOverrides=",">
             <if test="reportNo != null and reportNo != ''">report_no = #{reportNo},</if>
             <if test="sessionId != null">session_id = #{sessionId},</if>
-            <if test="userId != null">user_id = #{userId},</if>
             <if test="totalScore != null">total_score = #{totalScore},</if>
             <if test="scoreCompleteness != null">score_completeness = #{scoreCompleteness},</if>
             <if test="scoreLogic != null">score_logic = #{scoreLogic},</if>

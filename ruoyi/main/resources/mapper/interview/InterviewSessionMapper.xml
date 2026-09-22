@@ -36,6 +36,7 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
     <select id="selectInterviewSessionList" parameterType="InterviewSession" resultMap="InterviewSessionResult">
         <include refid="selectInterviewSessionVo"/>
         <where>  
+            <if test="userId != null"> and user_id = #{userId}</if>
             <if test="sessionNo != null  and sessionNo != ''"> and session_no = #{sessionNo}</if>
             <if test="industry != null  and industry != ''"> and industry = #{industry}</if>
             <if test="jobName != null  and jobName != ''"> and job_name like concat('%', #{jobName}, '%')</if>
@@ -56,7 +57,7 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
         insert into interview_session
         <trim prefix="(" suffix=")" suffixOverrides=",">
             <if test="sessionNo != null and sessionNo != ''">session_no,</if>
-            <if test="userId != null">user_id,</if>
+            user_id,
             <if test="jobProfileId != null">job_profile_id,</if>
             <if test="industry != null">industry,</if>
             <if test="jobName != null">job_name,</if>
@@ -79,7 +80,7 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
          </trim>
         <trim prefix="values (" suffix=")" suffixOverrides=",">
             <if test="sessionNo != null and sessionNo != ''">#{sessionNo},</if>
-            <if test="userId != null">#{userId},</if>
+            #{userId},
             <if test="jobProfileId != null">#{jobProfileId},</if>
             <if test="industry != null">#{industry},</if>
             <if test="jobName != null">#{jobName},</if>
@@ -106,7 +107,6 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
         update interview_session
         <trim prefix="SET" suffixOverrides=",">
             <if test="sessionNo != null and sessionNo != ''">session_no = #{sessionNo},</if>
-            <if test="userId != null">user_id = #{userId},</if>
             <if test="jobProfileId != null">job_profile_id = #{jobProfileId},</if>
             <if test="industry != null">industry = #{industry},</if>
             <if test="jobName != null">job_name = #{jobName},</if>

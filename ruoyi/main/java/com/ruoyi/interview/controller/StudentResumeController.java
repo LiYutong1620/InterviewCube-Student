@@ -18,6 +18,7 @@ import com.ruoyi.common.core.domain.AjaxResult;
 import com.ruoyi.common.enums.BusinessType;
 import com.ruoyi.interview.domain.StudentResume;
 import com.ruoyi.interview.service.IStudentResumeService;
+import com.ruoyi.interview.utils.StudentDataScopeUtils;
 import com.ruoyi.common.utils.poi.ExcelUtil;
 import com.ruoyi.common.core.page.TableDataInfo;
 
@@ -41,6 +42,7 @@ public class StudentResumeController extends BaseController
     @GetMapping("/list")
     public TableDataInfo list(StudentResume studentResume)
     {
+        StudentDataScopeUtils.scopeToCurrentUser(studentResume);
         startPage();
         List<StudentResume> list = studentResumeService.selectStudentResumeList(studentResume);
         return getDataTable(list);
@@ -54,6 +56,7 @@ public class StudentResumeController extends BaseController
     @PostMapping("/export")
     public void export(HttpServletResponse response, StudentResume studentResume)
     {
+        StudentDataScopeUtils.scopeToCurrentUser(studentResume);
         List<StudentResume> list = studentResumeService.selectStudentResumeList(studentResume);
         ExcelUtil<StudentResume> util = new ExcelUtil<StudentResume>(StudentResume.class);
         util.exportExcel(response, list, "学生简历数据");
@@ -66,7 +69,7 @@ public class StudentResumeController extends BaseController
     @GetMapping(value = "/{id}")
     public AjaxResult getInfo(@PathVariable("id") Long id)
     {
-        return success(studentResumeService.selectStudentResumeById(id));
+        return success(StudentDataScopeUtils.checkOwner(studentResumeService.selectStudentResumeById(id), "学生简历"));
     }
 
     /**
@@ -77,6 +80,7 @@ public class StudentResumeController extends BaseController
     @PostMapping
     public AjaxResult add(@RequestBody StudentResume studentResume)
     {
+        StudentDataScopeUtils.bindOwner(studentResume);
         return toAjax(studentResumeService.insertStudentResume(studentResume));
     }
 
@@ -88,6 +92,7 @@ public class StudentResumeController extends BaseController
     @PutMapping
     public AjaxResult edit(@RequestBody StudentResume studentResume)
     {
+        StudentDataScopeUtils.checkOwner(studentResumeService.selectStudentResumeById(studentResume.getId()), "学生简历");
         return toAjax(studentResumeService.updateStudentResume(studentResume));
     }
 
@@ -99,6 +104,10 @@ public class StudentResumeController extends BaseController
 	@DeleteMapping("/{ids}")
     public AjaxResult remove(@PathVariable Long[] ids)
     {
+        for (Long id : ids)
+        {
+            StudentDataScopeUtils.checkOwner(studentResumeService.selectStudentResumeById(id), "学生简历");
+        }
         return toAjax(studentResumeService.deleteStudentResumeByIds(ids));
     }
 }

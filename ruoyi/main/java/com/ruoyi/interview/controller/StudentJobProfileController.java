@@ -18,6 +18,7 @@ import com.ruoyi.common.core.domain.AjaxResult;
 import com.ruoyi.common.enums.BusinessType;
 import com.ruoyi.interview.domain.StudentJobProfile;
 import com.ruoyi.interview.service.IStudentJobProfileService;
+import com.ruoyi.interview.utils.StudentDataScopeUtils;
 import com.ruoyi.common.utils.poi.ExcelUtil;
 import com.ruoyi.common.core.page.TableDataInfo;
 
@@ -41,6 +42,7 @@ public class StudentJobProfileController extends BaseController
     @GetMapping("/list")
     public TableDataInfo list(StudentJobProfile studentJobProfile)
     {
+        StudentDataScopeUtils.scopeToCurrentUser(studentJobProfile);
         startPage();
         List<StudentJobProfile> list = studentJobProfileService.selectStudentJobProfileList(studentJobProfile);
         return getDataTable(list);
@@ -54,6 +56,7 @@ public class StudentJobProfileController extends BaseController
     @PostMapping("/export")
     public void export(HttpServletResponse response, StudentJobProfile studentJobProfile)
     {
+        StudentDataScopeUtils.scopeToCurrentUser(studentJobProfile);
         List<StudentJobProfile> list = studentJobProfileService.selectStudentJobProfileList(studentJobProfile);
         ExcelUtil<StudentJobProfile> util = new ExcelUtil<StudentJobProfile>(StudentJobProfile.class);
         util.exportExcel(response, list, "学生岗位画像数据");
@@ -66,7 +69,7 @@ public class StudentJobProfileController extends BaseController
     @GetMapping(value = "/{id}")
     public AjaxResult getInfo(@PathVariable("id") Long id)
     {
-        return success(studentJobProfileService.selectStudentJobProfileById(id));
+        return success(StudentDataScopeUtils.checkOwner(studentJobProfileService.selectStudentJobProfileById(id), "学生岗位画像"));
     }
 
     /**
@@ -77,6 +80,7 @@ public class StudentJobProfileController extends BaseController
     @PostMapping
     public AjaxResult add(@RequestBody StudentJobProfile studentJobProfile)
     {
+        StudentDataScopeUtils.bindOwner(studentJobProfile);
         return toAjax(studentJobProfileService.insertStudentJobProfile(studentJobProfile));
     }
 
@@ -88,6 +92,7 @@ public class StudentJobProfileController extends BaseController
     @PutMapping
     public AjaxResult edit(@RequestBody StudentJobProfile studentJobProfile)
     {
+        StudentDataScopeUtils.checkOwner(studentJobProfileService.selectStudentJobProfileById(studentJobProfile.getId()), "学生岗位画像");
         return toAjax(studentJobProfileService.updateStudentJobProfile(studentJobProfile));
     }
 
@@ -99,6 +104,10 @@ public class StudentJobProfileController extends BaseController
 	@DeleteMapping("/{ids}")
     public AjaxResult remove(@PathVariable Long[] ids)
     {
+        for (Long id : ids)
+        {
+            StudentDataScopeUtils.checkOwner(studentJobProfileService.selectStudentJobProfileById(id), "学生岗位画像");
+        }
         return toAjax(studentJobProfileService.deleteStudentJobProfileByIds(ids));
     }
 }
