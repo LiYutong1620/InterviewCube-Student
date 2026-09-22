@@ -1,41 +1,15 @@
 <template>
   <div class="app-container">
+    <!-- 查询区：只保留「简历名称」 -->
     <el-form :model="queryParams" ref="queryRef" :inline="true" v-show="showSearch" label-width="68px">
       <el-form-item label="简历名称" prop="resumeName">
         <el-input
           v-model="queryParams.resumeName"
           placeholder="请输入简历名称"
           clearable
+          style="width: 220px"
           @keyup.enter="handleQuery"
         />
-      </el-form-item>
-      <el-form-item label="文件类型(pdf/doc/docx/jpg/png)" prop="fileType">
-        <el-input
-          v-model="queryParams.fileType"
-          placeholder="请输入文件类型(pdf/doc/docx/jpg/png)"
-          clearable
-          @keyup.enter="handleQuery"
-        />
-      </el-form-item>
-      <el-form-item label="是否默认(0否 1是)" prop="isDefault">
-        <el-select v-model="queryParams.isDefault" placeholder="请选择是否默认(0否 1是)" clearable>
-          <el-option
-            v-for="dict in sys_yes_no"
-            :key="dict.value"
-            :label="dict.label"
-            :value="dict.value"
-          />
-        </el-select>
-      </el-form-item>
-      <el-form-item label="状态(0正常 1停用)" prop="status">
-        <el-select v-model="queryParams.status" placeholder="请选择状态(0正常 1停用)" clearable>
-          <el-option
-            v-for="dict in sys_normal_disable"
-            :key="dict.value"
-            :label="dict.label"
-            :value="dict.value"
-          />
-        </el-select>
       </el-form-item>
       <el-form-item>
         <el-button type="primary" icon="Search" @click="handleQuery">搜索</el-button>
@@ -87,48 +61,50 @@
 
     <el-table v-loading="loading" :data="resumeList" @selection-change="handleSelectionChange">
       <el-table-column type="selection" width="55" align="center" />
-      <el-table-column label="主键ID" align="center" prop="id" />
-      <el-table-column label="所属学生用户ID" align="center" prop="userId" />
-      <el-table-column label="简历名称" align="center" prop="resumeName" />
-      <el-table-column label="文件类型(pdf/doc/docx/jpg/png)" align="center" prop="fileType" />
-      <el-table-column label="来源(1本地上传 2拍照导入)" align="center" prop="sourceType" />
-      <el-table-column label="是否默认(0否 1是)" align="center" prop="isDefault">
+      <el-table-column label="简历名称" align="center" prop="resumeName" :show-overflow-tooltip="true" />
+      <el-table-column label="文件" align="center" width="90">
         <template #default="scope">
-          <dict-tag :options="sys_yes_no" :value="scope.row.isDefault"/>
+          <el-link
+            v-if="scope.row.fileUrl"
+            type="primary"
+            :href="resolveFileUrl(scope.row.fileUrl)"
+            target="_blank"
+            rel="noopener"
+            :underline="false"
+          >查看</el-link>
+          <span v-else class="text-muted">—</span>
         </template>
       </el-table-column>
-      <el-table-column label="解析状态(0未解析 1解析中 2解析成功 3解析失败)" align="center" prop="parseStatus" />
-      <el-table-column label="解析完成时间" align="center" prop="parseTime" width="180">
+      <el-table-column label="类型" align="center" prop="fileType" width="80">
         <template #default="scope">
-          <span>{{ parseTime(scope.row.parseTime, '{y}-{m}-{d}') }}</span>
+          <span v-if="scope.row.fileType">{{ scope.row.fileType }}</span>
+          <span v-else class="text-muted">—</span>
         </template>
       </el-table-column>
-      <el-table-column label="状态(0正常 1停用)" align="center" prop="status">
+      <el-table-column label="来源" align="center" prop="sourceType" width="110">
         <template #default="scope">
-          <dict-tag :options="sys_normal_disable" :value="scope.row.status"/>
+          <dict-tag :options="student_resume_source" :value="scope.row.sourceType"/>
         </template>
       </el-table-column>
-      <el-table-column label="创建者" align="center" prop="createBy" />
-      <el-table-column label="创建时间" align="center" prop="createTime" width="180">
+      <el-table-column label="默认" align="center" prop="isDefault" width="90">
+        <template #default="scope">
+          <el-tag v-if="scope.row.isDefault === '1'" type="success" disable-transitions>默认</el-tag>
+          <span v-else class="text-muted">—</span>
+        </template>
+      </el-table-column>
+      <el-table-column label="创建时间" align="center" prop="createTime" width="120">
         <template #default="scope">
           <span>{{ parseTime(scope.row.createTime, '{y}-{m}-{d}') }}</span>
         </template>
       </el-table-column>
-      <el-table-column label="更新者" align="center" prop="updateBy" />
-      <el-table-column label="更新时间" align="center" prop="updateTime" width="180">
+      <el-table-column label="操作" align="center" width="160" class-name="small-padding fixed-width">
         <template #default="scope">
-          <span>{{ parseTime(scope.row.updateTime, '{y}-{m}-{d}') }}</span>
-        </template>
-      </el-table-column>
-      <el-table-column label="操作" align="center" class-name="small-padding fixed-width">
-        <template #default="scope">
-          <el-button link type="primary" icon="View" @click="handleViewData(scope.row)" v-hasPermi="['interview:resume:query']">详情</el-button>
           <el-button link type="primary" icon="Edit" @click="handleUpdate(scope.row)" v-hasPermi="['interview:resume:edit']">修改</el-button>
           <el-button link type="primary" icon="Delete" @click="handleDelete(scope.row)" v-hasPermi="['interview:resume:remove']">删除</el-button>
         </template>
       </el-table-column>
     </el-table>
-    
+
     <pagination
       v-show="total>0"
       :total="total"
@@ -137,73 +113,62 @@
       @pagination="getList"
     />
 
-    <!-- 学生简历详情抽屉 -->
-    <resume-view-drawer ref="resumeViewRef" />
     <!-- 添加或修改学生简历对话框 -->
-    <el-dialog :title="title" v-model="open" width="800px" append-to-body>
+    <el-dialog :title="title" v-model="open" width="640px" append-to-body>
       <el-form ref="resumeRef" :model="form" :rules="rules" label-width="100px">
-        <el-row>
-          <el-col :span="12">
+        <el-row :gutter="20">
+          <el-col :span="24">
             <el-form-item label="简历名称" prop="resumeName">
-              <el-input v-model="form.resumeName" placeholder="请输入简历名称" />
-            </el-form-item>
-          </el-col>
-          <el-col :span="12">
-            <el-form-item label="简历文件地址" prop="fileUrl">
-              <file-upload v-model="form.fileUrl"/>
-            </el-form-item>
-          </el-col>
-          <el-col :span="12">
-            <el-form-item label="文件类型(pdf/doc/docx/jpg/png)" prop="fileType">
-              <el-input v-model="form.fileType" placeholder="请输入文件类型(pdf/doc/docx/jpg/png)" />
-            </el-form-item>
-          </el-col>
-          <el-col :span="12">
-            <el-form-item label="文件大小(字节)" prop="fileSize">
-              <el-input v-model="form.fileSize" placeholder="请输入文件大小(字节)" />
-            </el-form-item>
-          </el-col>
-          <el-col :span="12">
-            <el-form-item label="是否默认(0否 1是)" prop="isDefault">
-              <el-radio-group v-model="form.isDefault">
-                <el-radio
-                  v-for="dict in sys_yes_no"
-                  :key="dict.value"
-                  :label="dict.value"
-                >{{dict.label}}</el-radio>
-              </el-radio-group>
+              <el-input
+                v-model="form.resumeName"
+                placeholder="如：Java 后端开发-校招版"
+                maxlength="100"
+                show-word-limit
+              />
             </el-form-item>
           </el-col>
           <el-col :span="24">
-            <el-form-item label="AI解析结果(JSON)" prop="parseResult">
-              <el-input v-model="form.parseResult" type="textarea" placeholder="请输入内容" />
+            <el-form-item label="简历文件" prop="fileUrl">
+              <file-upload
+                v-model="form.fileUrl"
+                :limit="1"
+                :fileSize="10"
+                :fileType="['pdf', 'doc', 'docx']"
+              />
             </el-form-item>
           </el-col>
           <el-col :span="12">
-            <el-form-item label="解析完成时间" prop="parseTime">
-              <el-date-picker clearable
-                v-model="form.parseTime"
-                type="date"
-                value-format="YYYY-MM-DD"
-                placeholder="请选择解析完成时间">
-              </el-date-picker>
-            </el-form-item>
-          </el-col>
-          <el-col :span="12">
-            <el-form-item label="状态(0正常 1停用)" prop="status">
-              <el-select v-model="form.status" placeholder="请选择状态(0正常 1停用)">
+            <el-form-item label="来源" prop="sourceType">
+              <el-select v-model="form.sourceType" placeholder="请选择来源" style="width: 100%">
                 <el-option
-                  v-for="dict in sys_normal_disable"
+                  v-for="dict in student_resume_source"
                   :key="dict.value"
                   :label="dict.label"
                   :value="dict.value"
-                ></el-option>
+                />
               </el-select>
+            </el-form-item>
+          </el-col>
+          <el-col :span="12">
+            <el-form-item label="设为默认" prop="isDefault">
+              <el-switch v-model="form.isDefault" active-value="1" inactive-value="0" />
+            </el-form-item>
+          </el-col>
+          <el-col :span="24">
+            <el-form-item>
+              <span class="form-tip">设为默认后，你名下的其他简历会自动取消默认（同时只允许一个默认）。</span>
             </el-form-item>
           </el-col>
           <el-col :span="24">
             <el-form-item label="备注" prop="remark">
-              <el-input v-model="form.remark" type="textarea" placeholder="请输入内容" />
+              <el-input
+                v-model="form.remark"
+                type="textarea"
+                :rows="3"
+                maxlength="500"
+                show-word-limit
+                placeholder="给自己看的备注"
+              />
             </el-form-item>
           </el-col>
         </el-row>
@@ -220,10 +185,14 @@
 
 <script setup name="Resume">
 import { listResume, getResume, delResume, addResume, updateResume } from "@/api/interview/resume"
-import ResumeViewDrawer from "./view"
 
 const { proxy } = getCurrentInstance()
-const { sys_yes_no, sys_normal_disable } = useDict('sys_yes_no', 'sys_normal_disable')
+const { student_resume_source } = useDict('student_resume_source')
+
+const baseUrl = import.meta.env.VITE_APP_BASE_API
+
+/** 可维护字段的白名单：status / parse_* 由系统维护，不参与提交 */
+const EDITABLE_FIELDS = ['resumeName', 'fileUrl', 'sourceType', 'isDefault', 'remark']
 
 const resumeList = ref([])
 const open = ref(false)
@@ -240,24 +209,35 @@ const data = reactive({
   queryParams: {
     pageNum: 1,
     pageSize: 10,
-    resumeName: undefined,
-    fileType: undefined,
-    sourceType: undefined,
-    isDefault: undefined,
-    parseStatus: undefined,
-    status: undefined,
+    resumeName: undefined
   },
   rules: {
     resumeName: [
       { required: true, message: "简历名称不能为空", trigger: "blur" }
     ],
     fileUrl: [
-      { required: true, message: "简历文件地址不能为空", trigger: "blur" }
-    ],
+      { required: true, message: "请上传简历文件", trigger: "change" }
+    ]
   }
 })
 
 const { queryParams, form, rules } = toRefs(data)
+
+/** 把上传返回的相对地址补成完整地址（已是 http 开头的不动） */
+function resolveFileUrl(url) {
+  if (!url) return ''
+  return /^https?:\/\//i.test(url) ? url : baseUrl + url
+}
+
+/** 从文件地址推文件类型：若依上传接口只返回 url，不返回类型 */
+function resolveFileType(url) {
+  if (!url) return ''
+  const clean = String(url).split('?')[0].split('#')[0]
+  const dot = clean.lastIndexOf('.')
+  if (dot < 0) return ''
+  const ext = clean.slice(dot + 1).toLowerCase()
+  return ext.length > 0 && ext.length <= 20 ? ext : ''
+}
 
 /** 查询学生简历列表 */
 function getList() {
@@ -265,6 +245,8 @@ function getList() {
   listResume(queryParams.value).then(response => {
     resumeList.value = response.rows
     total.value = response.total
+    loading.value = false
+  }).catch(() => {
     loading.value = false
   })
 }
@@ -279,22 +261,11 @@ function cancel() {
 function reset() {
   form.value = {
     id: null,
-    userId: null,
     resumeName: null,
     fileUrl: null,
     fileType: null,
-    fileSize: null,
-    sourceType: null,
-    isDefault: null,
-    parseStatus: null,
-    parseResult: null,
-    parseTime: null,
-    status: null,
-    delFlag: null,
-    createBy: null,
-    createTime: null,
-    updateBy: null,
-    updateTime: null,
+    sourceType: "1",
+    isDefault: "0",
     remark: null
   }
   proxy.resetForm("resumeRef")
@@ -323,7 +294,7 @@ function handleSelectionChange(selection) {
 function handleAdd() {
   reset()
   open.value = true
-  title.value = "添加学生简历"
+  title.value = "新增简历"
 }
 
 /** 修改按钮操作 */
@@ -331,47 +302,49 @@ function handleUpdate(row) {
   reset()
   const _id = row.id || ids.value
   getResume(_id).then(response => {
-    form.value = response.data
+    const detail = response.data || {}
+    form.value = {
+      id: detail.id,
+      resumeName: detail.resumeName,
+      fileUrl: detail.fileUrl,
+      fileType: detail.fileType,
+      sourceType: detail.sourceType || "1",
+      isDefault: detail.isDefault || "0",
+      remark: detail.remark
+    }
     open.value = true
-    title.value = "修改学生简历"
+    title.value = "修改简历"
   })
 }
 
 /** 提交按钮 */
 function submitForm() {
   proxy.$refs["resumeRef"].validate(valid => {
-    if (valid) {
-      if (form.value.id != null) {
-        updateResume(form.value).then(() => {
-          proxy.$modal.msgSuccess("修改成功")
-          open.value = false
-          getList()
-        })
-      } else {
-        addResume(form.value).then(() => {
-          proxy.$modal.msgSuccess("新增成功")
-          open.value = false
-          getList()
-        })
-      }
-    }
+    if (!valid) return
+    const payload = { id: form.value.id }
+    EDITABLE_FIELDS.forEach(field => {
+      payload[field] = form.value[field]
+    })
+    // 文件类型由文件地址推导，学生不手填
+    payload.fileType = resolveFileType(payload.fileUrl)
+    const action = form.value.id ? updateResume(payload) : addResume(payload)
+    action.then(() => {
+      proxy.$modal.msgSuccess(form.value.id ? "修改成功" : "新增成功")
+      open.value = false
+      getList()
+    }).catch(() => {})
   })
 }
 
 /** 删除按钮操作 */
 function handleDelete(row) {
   const _ids = row.id || ids.value
-  proxy.$modal.confirm('是否确认删除学生简历编号为"' + _ids + '"的数据项？').then(function() {
+  proxy.$modal.confirm('是否确认删除所选简历？').then(function() {
     return delResume(_ids)
   }).then(() => {
     getList()
     proxy.$modal.msgSuccess("删除成功")
   }).catch(() => {})
-}
-
-/** 详情按钮操作 */
-function handleViewData(row) {
-  proxy.$refs["resumeViewRef"].open(row.id)
 }
 
 /** 导出按钮操作 */
@@ -383,3 +356,15 @@ function handleExport() {
 
 getList()
 </script>
+
+<style scoped>
+.text-muted {
+  color: #c0c4cc;
+}
+
+.form-tip {
+  font-size: 12px;
+  color: #909399;
+  line-height: 1.5;
+}
+</style>

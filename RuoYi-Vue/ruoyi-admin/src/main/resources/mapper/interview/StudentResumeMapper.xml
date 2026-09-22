@@ -122,4 +122,15 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
             #{id}
         </foreach>
     </delete>
+
+    <!-- 唯一默认：把该学生名下其他简历的 is_default 置为 0（新增时 keepId 传 null；只处理未删除行 del_flag='0'） -->
+    <update id="clearDefaultByUserId">
+        update student_resume
+        set is_default = '0'
+        where user_id = #{userId}
+          and is_default = '1'
+          and del_flag = '0'
+        <if test="keepId != null"> and id != #{keepId}</if>
+    </update>
+
 </mapper>

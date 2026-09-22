@@ -4,6 +4,7 @@ import java.util.List;
 import com.ruoyi.common.utils.DateUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import com.ruoyi.interview.mapper.StudentResumeMapper;
 import com.ruoyi.interview.domain.StudentResume;
 import com.ruoyi.interview.service.IStudentResumeService;
@@ -17,6 +18,9 @@ import com.ruoyi.interview.service.IStudentResumeService;
 @Service
 public class StudentResumeServiceImpl implements IStudentResumeService 
 {
+    /** 是否默认：1 是 */
+    private static final String IS_DEFAULT_YES = "1";
+
     @Autowired
     private StudentResumeMapper studentResumeMapper;
 
@@ -54,6 +58,11 @@ public class StudentResumeServiceImpl implements IStudentResumeService
     public int insertStudentResume(StudentResume studentResume)
     {
         studentResume.setCreateTime(DateUtils.getNowDate());
+        // 唯一默认：新增为默认时，先取消该学生名下已有的默认
+        if (IS_DEFAULT_YES.equals(studentResume.getIsDefault()))
+        {
+            studentResumeMapper.clearDefaultByUserId(studentResume.getUserId(), null);
+        }
         return studentResumeMapper.insertStudentResume(studentResume);
     }
 
@@ -67,7 +76,28 @@ public class StudentResumeServiceImpl implements IStudentResumeService
     public int updateStudentResume(StudentResume studentResume)
     {
         studentResume.setUpdateTime(DateUtils.getNowDate());
+        // 唯一默认：改为默认时，先取消该学生名下其他默认
+        if (IS_DEFAULT_YES.equals(studentResume.getIsDefault()))
+        {
+            studentResumeMapper.clearDefaultByUserId(resolveOwnerId(studentResume), studentResume.getId());
+        }
         return studentResumeMapper.updateStudentResume(studentResume);
+    }
+
+    /**
+     * 取归属学生ID：修改接口不接收前端传来的 user_id，需要回查数据库
+     *
+     * @param studentResume 学生简历
+     * @return 归属学生用户ID，查不到返回 null
+     */
+    private Long resolveOwnerId(StudentResume studentResume)
+    {
+        if (studentResume.getUserId() != null)
+        {
+            return studentResume.getUserId();
+        }
+        StudentResume existing = studentResumeMapper.selectStudentResumeById(studentResume.getId());
+        return existing == null ? null : existing.getUserId();
     }
 
     /**
