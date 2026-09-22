@@ -112,15 +112,19 @@ RuoYi-Vue3\
 | `面立方-三级功能清单-学生.xlsx` | 完整三级功能清单（产品规划全量） |
 | `一阶段三级功能清单.xlsx` | 阶段一裁剪后的 CRUD 范围：一级/二级/三级菜单 → 实体 → 表名 → CRUD 类型 → 权限标识 |
 | `菜单权限标识清单.xlsx` | 8 个菜单的权限标识清单，如 `interview:resume:list/add/edit/remove` |
+| `学生端对外契约.md` | **三端合并的对接依据**：接口、权限、数据表、菜单 id 段、公共依赖、合并注意事项 |
+| `CRUD字段清单.md` | 8 个模块的字段取舍：哪些显示 / 隐藏 / 只读 / 要补校验，以及待建字典清单 |
 
 **`sql\`（数据库脚本 —— 分类与执行顺序详见 `sql\README.md`）**
 
 | 文件 | 性质 | 内容 |
 | :--- | :--- | :--- |
 | `student.sql` | ✅ 可执行 | 学生端 8 张业务表建表语句（`DROP + CREATE`；均带若依习惯字段 `create_by/create_time/update_by/update_time/remark`，业务表另有 `user_id` 做数据归属） |
+| `student_dict.sql` | ✅ 可执行 | 13 个业务字典类型 + 45 条字典数据（学历 / 行业 / 难度 / 题型 / 各类状态），幂等 |
 | `student_role_user.sql` | ✅ 可执行 | 「学生」角色 + `student01` / `student02` 账号 + 角色菜单绑定，幂等 |
 | `cleanup_student_role_dup.sql` | ⚠️ 一次性 | 角色去重（保留 role 102，删 100 / 101）。**已执行完毕，勿再跑** |
-| `README.md` | 说明 | SQL 分类、从零重建的 13 步顺序、内置账号 |
+| `alter_column_comment_to_code.sql` | ⚠️ 一次性 | **仅已建过表的库需要**：把 10 个列的注释改成「码=含义」。干净库不用跑 |
+| `README.md` | 说明 | SQL 分类、从零重建的 14 步顺序、内置账号 |
 | `实体与表.xlsx` | 资料 | 实体 ↔ 表 ↔ 字段设计对照 |
 | `代码生成器配置表.xlsx` | 资料 | 若依代码生成器导入配置（字段类型、查询方式、显示类型等） |
 
@@ -135,9 +139,10 @@ RuoYi-Vue3\
 
 ### 六、运行顺序（本地起服务）
 
-1. 建库 → 按 `sql\README.md` 的 **13 步顺序**执行：`RuoYi-Vue\sql\ry_20260417.sql` → `quartz.sql` → `sql\student.sql` → `ruoyi\*Menu.sql`（8 个）→ `ruoyi\dataScopePermiMenu.sql` → `sql\student_role_user.sql`。
-   - ⚠️ `ruoyi\*Menu.sql`（第 4 ~ 11 步）**只能跑一次**，重跑会产生第二套菜单、绑定数翻倍；
-   - ✅ 第 13 步会自动建出「学生」角色与 `student01` / `student02` 账号（初始密码 `admin123`）。
+1. 建库 → 按 `sql\README.md` 的 **14 步顺序**执行：`RuoYi-Vue\sql\ry_20260417.sql` → `quartz.sql` → `sql\student.sql` → `ruoyi\*Menu.sql`（8 个）→ `ruoyi\dataScopePermiMenu.sql` → `sql\student_role_user.sql` → `sql\student_dict.sql`。
+   - ✅ `ruoyi\*Menu.sql`（第 4 ~ 11 步）**已幂等**，可重复执行，不会产生第二套菜单；
+   - ✅ 第 13 步会自动建出「学生」角色与 `student01` / `student02` 账号（初始密码 `admin123`）；
+   - ✅ 第 14 步建业务字典（学历、行业、难度、题型、各类状态），幂等。
 2. 改 `RuoYi-Vue\ruoyi-admin\src\main\resources\application-druid.yml` 里的数据库连接
 3. 启动后端：运行 `RuoYi-Vue\ruoyi-admin` 的 `RuoYiApplication`（或 `ry.bat`）
 4. 启动前端：`cd RuoYi-Vue3 && npm install && npm run dev`

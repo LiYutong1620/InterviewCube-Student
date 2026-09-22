@@ -16,11 +16,9 @@ public class StudentProfile extends BaseEntity implements UserOwned
     private static final long serialVersionUID = 1L;
 
     /** 主键ID */
-    @Excel(name = "主键ID")
     private Long id;
 
     /** 关联若依用户ID(sys_user.user_id) */
-    @Excel(name = "关联若依用户ID(sys_user.user_id)")
     private Long userId;
 
     /** 昵称 */
@@ -35,8 +33,8 @@ public class StudentProfile extends BaseEntity implements UserOwned
     @Excel(name = "真实姓名")
     private String realName;
 
-    /** 性别 */
-    @Excel(name = "性别")
+    /** 性别(0男 1女 2未知) */
+    @Excel(name = "性别", readConverterExp = "0=男,1=女,2=未知")
     private String gender;
 
     /** 手机号 */
@@ -55,8 +53,8 @@ public class StudentProfile extends BaseEntity implements UserOwned
     @Excel(name = "专业")
     private String major;
 
-    /** 学历(专科/本科/硕士/博士) */
-    @Excel(name = "学历(专科/本科/硕士/博士)")
+    /** 学历(1专科 2本科 3硕士 4博士) */
+    @Excel(name = "学历", readConverterExp = "1=专科,2=本科,3=硕士,4=博士")
     private String education;
 
     /** 毕业年份 */
@@ -64,7 +62,6 @@ public class StudentProfile extends BaseEntity implements UserOwned
     private String graduationYear;
 
     /** 引导状态(0未完成 1已完成) */
-    @Excel(name = "引导状态(0未完成 1已完成)")
     private String guideStatus;
 
     /** 当前等级 */
@@ -76,7 +73,6 @@ public class StudentProfile extends BaseEntity implements UserOwned
     private Integer currentPoints;
 
     /** 状态(0正常 1停用) */
-    @Excel(name = "状态(0正常 1停用)")
     private String status;
 
     /** 删除标志(0存在 2删除) */
