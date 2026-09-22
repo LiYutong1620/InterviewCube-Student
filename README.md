@@ -17,7 +17,7 @@
 E:\00InterviewCube-Student\
 ├── RuoYi-Vue\              # 后端：若依 RuoYi-Vue（Spring Boot 多模块 Maven 工程）
 ├── RuoYi-Vue3\             # 前端：若依 RuoYi-Vue3（Vue3 + Vite + Element Plus）
-├── ruoyi\                  # 代码生成器产出物暂存区（后端 main / 前端 vue / 8 张菜单 SQL）
+├── ruoyi\                  # 代码生成器产出物暂存区（后端 main / 前端 vue / 9 张菜单 SQL，已并入 sql\student_init.sql 第 2 节）
 ├── doc\                    # 需求与设计文档（功能清单、实体映射、权限标识）
 ├── sql\                    # 数据库脚本（若依基础表 + 学生端业务表）
 └── README.md               # 本文件：阶段目标、进度、结构说明
@@ -114,17 +114,16 @@ RuoYi-Vue3\
 | `菜单权限标识清单.xlsx` | 8 个菜单的权限标识清单，如 `interview:resume:list/add/edit/remove` |
 | `学生端对外契约.md` | **三端合并的对接依据**：接口、权限、数据表、菜单 id 段、公共依赖、合并注意事项 |
 | `CRUD字段清单.md` | 8 个模块的字段取舍：哪些显示 / 隐藏 / 只读 / 要补校验，以及待建字典清单 |
+| `面试流程四件套形态方案.md` | 场次 / 题目 / 问答 / 报告四个流程模块的页面形态方案（**方案 A 已拍板，S1~S5 全部落地**），含 6 个已定问题、施工顺序 S1~S5 与落地记录 |
 
 **`sql\`（数据库脚本 —— 分类与执行顺序详见 `sql\README.md`）**
 
 | 文件 | 性质 | 内容 |
 | :--- | :--- | :--- |
-| `student.sql` | ✅ 可执行 | 学生端 8 张业务表建表语句（`DROP + CREATE`；均带若依习惯字段 `create_by/create_time/update_by/update_time/remark`，业务表另有 `user_id` 做数据归属） |
-| `student_dict.sql` | ✅ 可执行 | 13 个业务字典类型 + 45 条字典数据（学历 / 行业 / 难度 / 题型 / 各类状态），幂等 |
-| `student_role_user.sql` | ✅ 可执行 | 「学生」角色 + `student01` / `student02` 账号 + 角色菜单绑定，幂等 |
-| `cleanup_student_role_dup.sql` | ⚠️ 一次性 | 角色去重（保留 role 102，删 100 / 101）。**已执行完毕，勿再跑** |
-| `alter_column_comment_to_code.sql` | ⚠️ 一次性 | **仅已建过表的库需要**：把 10 个列的注释改成「码=含义」。干净库不用跑 |
-| `README.md` | 说明 | SQL 分类、从零重建的 14 步顺序、内置账号 |
+| **`student_init.sql`** | ✅ **一键重建** | **学生端全部内容**：8 张业务表 + 50 条菜单 + 角色与账号 + 13 个字典类型 + 26 道演示题（5 节，顺序已排好）。**跑完这一个文件，库就完整可用。** ⚠️ 第 1 节含 `DROP TABLE` |
+| `student_patch.sql` | ⚠️ 旧库补丁 | **只在已建过库、不想重建时用**：改列注释 + 角色去重 |
+| `student.sql` · `student_menu.sql` · `student_role_user.sql` · `student_dict.sql` · `student_question_bank_seed.sql` · `alter_column_comment_to_code.sql` · `cleanup_student_role_dup.sql` | 留档 | 已被上面两个文件吸收，各自头部有 banner 指向对应节。**不要单独跑** |
+| `README.md` | 说明 | SQL 分类、从零重建的 3 步顺序、内置账号 |
 | `实体与表.xlsx` | 资料 | 实体 ↔ 表 ↔ 字段设计对照 |
 | `代码生成器配置表.xlsx` | 资料 | 若依代码生成器导入配置（字段类型、查询方式、显示类型等） |
 
@@ -134,15 +133,13 @@ RuoYi-Vue3\
 | :--- | :--- |
 | `main\` | 生成的后端 Java + Mapper XML（与 `RuoYi-Vue\ruoyi-admin\src\main` 中 interview 部分一致） |
 | `vue\` | 生成的前端 api + views（与 `RuoYi-Vue3\src` 中 interview 部分一致） |
-| `*Menu.sql` | 8 张菜单的插入 SQL（profile / resume / jobprofile / session / question / qa / report / bank）。**幂等**，自带「学生端」目录创建，执行后菜单挂到该目录下，可单独运行 |
-| `dataScopePermiMenu.sql` | 注册 `interview:data:all` 权限点，供后台端分配给非超管角色 |
+| `*Menu.sql`（8 个）、`dataScopePermiMenu.sql` | 9 个菜单脚本的**原始出处**，已合并进 `sql\student_menu.sql`，再并入 **`sql\student_init.sql`**（第 2 节）。文件头有 banner 指向合并版；**不要再单独跑它们** |
 
 ### 六、运行顺序（本地起服务）
 
-1. 建库 → 按 `sql\README.md` 的 **14 步顺序**执行：`RuoYi-Vue\sql\ry_20260417.sql` → `quartz.sql` → `sql\student.sql` → `ruoyi\*Menu.sql`（8 个）→ `ruoyi\dataScopePermiMenu.sql` → `sql\student_role_user.sql` → `sql\student_dict.sql`。
-   - ✅ `ruoyi\*Menu.sql`（第 4 ~ 11 步）**已幂等**，可重复执行，不会产生第二套菜单；
-   - ✅ 第 13 步会自动建出「学生」角色与 `student01` / `student02` 账号（初始密码 `admin123`）；
-   - ✅ 第 14 步建业务字典（学历、行业、难度、题型、各类状态），幂等。
+1. 建库 → 按 `sql\README.md` 的 **3 步顺序**执行：`RuoYi-Vue\sql\ry_20260417.sql` → `quartz.sql` → **`sql\student_init.sql`**。
+   - ✅ `sql\student_init.sql`（第 3 步）一个文件跑完就有：8 张业务表 + 学生端菜单 + 「学生」角色与 `student01` / `student02` 账号（初始密码 `admin123`）+ 业务字典 + 26 道演示题；
+   - ⚠️ 第 1 节含 `DROP TABLE`，**会清空这 8 张业务表** —— 只用于从零重建；已有数据的库请用 `sql\student_patch.sql`。
 2. 改 `RuoYi-Vue\ruoyi-admin\src\main\resources\application-druid.yml` 里的数据库连接
 3. 启动后端：运行 `RuoYi-Vue\ruoyi-admin` 的 `RuoYiApplication`（或 `ry.bat`）
 4. 启动前端：`cd RuoYi-Vue3 && npm install && npm run dev`

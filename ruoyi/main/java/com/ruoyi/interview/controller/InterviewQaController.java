@@ -18,6 +18,7 @@ import com.ruoyi.common.core.domain.AjaxResult;
 import com.ruoyi.common.enums.BusinessType;
 import com.ruoyi.interview.domain.InterviewQa;
 import com.ruoyi.interview.service.IInterviewQaService;
+import com.ruoyi.interview.service.IInterviewSessionService;
 import com.ruoyi.interview.utils.StudentDataScopeUtils;
 import com.ruoyi.common.utils.poi.ExcelUtil;
 import com.ruoyi.common.core.page.TableDataInfo;
@@ -34,6 +35,9 @@ public class InterviewQaController extends BaseController
 {
     @Autowired
     private IInterviewQaService interviewQaService;
+
+    @Autowired
+    private IInterviewSessionService interviewSessionService;
 
     /**
      * 查询面试问答列表
@@ -82,6 +86,23 @@ public class InterviewQaController extends BaseController
     {
         StudentDataScopeUtils.bindOwner(interviewQa);
         return toAjax(interviewQaService.insertInterviewQa(interviewQa));
+    }
+
+    /**
+     * 提交一道题的作答（作答页唯一写入口）
+     * 只认 sessionId / questionId / answerContent / answerType / duration，
+     * 其余字段（user_id / question_content / status / score / ai_comment …）由后端带入；
+     * 响应体除作答记录外，另带 session 字段回传场次最新状态（可能已被置为「已完成」）
+     */
+    @PreAuthorize("@ss.hasPermi('interview:qa:add')")
+    @Log(title = "面试问答", businessType = BusinessType.INSERT)
+    @PostMapping("/submit")
+    public AjaxResult submit(@RequestBody InterviewQa interviewQa)
+    {
+        InterviewQa saved = interviewQaService.submitAnswer(interviewQa);
+        AjaxResult ajax = success(saved);
+        ajax.put("session", interviewSessionService.selectInterviewSessionById(saved.getSessionId()));
+        return ajax;
     }
 
     /**

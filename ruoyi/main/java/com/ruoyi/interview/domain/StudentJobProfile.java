@@ -16,35 +16,32 @@ public class StudentJobProfile extends BaseEntity implements UserOwned
     private static final long serialVersionUID = 1L;
 
     /** 主键ID */
-    @Excel(name = "主键ID")
     private Long id;
 
     /** 所属学生用户ID */
-    @Excel(name = "所属学生用户ID")
     private Long userId;
 
-    /** 行业(技术/产品/运营/财务/教师) */
-    @Excel(name = "行业(技术/产品/运营/财务/教师)")
+    /** 行业(1技术 2产品 3运营 4财务 5教师) */
+    @Excel(name = "行业", readConverterExp = "1=技术,2=产品,3=运营,4=财务,5=教师")
     private String industry;
 
     /** 岗位名称(如Java开发、产品经理) */
-    @Excel(name = "岗位名称(如Java开发、产品经理)")
+    @Excel(name = "岗位名称")
     private String jobName;
 
     /** 难度(1初级 2中级 3高级) */
-    @Excel(name = "难度(1初级 2中级 3高级)")
+    @Excel(name = "难度", readConverterExp = "1=初级,2=中级,3=高级")
     private String difficulty;
 
-    /** 目标企业类型(BAT/央企/外企/其他) */
-    @Excel(name = "目标企业类型(BAT/央企/外企/其他)")
+    /** 目标企业类型(1BAT 2央企 3外企 4其他) */
+    @Excel(name = "目标企业类型", readConverterExp = "1=BAT,2=央企,3=外企,4=其他")
     private String companyType;
 
     /** 是否默认(0否 1是) */
-    @Excel(name = "是否默认(0否 1是)")
+    @Excel(name = "是否默认", readConverterExp = "0=否,1=是")
     private String isDefault;
 
     /** 状态(0正常 1停用) */
-    @Excel(name = "状态(0正常 1停用)")
     private String status;
 
     /** 删除标志(0存在 2删除) */

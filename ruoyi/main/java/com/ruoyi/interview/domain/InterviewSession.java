@@ -19,7 +19,6 @@ public class InterviewSession extends BaseEntity implements UserOwned
     private static final long serialVersionUID = 1L;
 
     /** 主键ID */
-    @Excel(name = "主键ID")
     private Long id;
 
     /** 面试场次编号 */
@@ -27,11 +26,9 @@ public class InterviewSession extends BaseEntity implements UserOwned
     private String sessionNo;
 
     /** 所属学生用户ID */
-    @Excel(name = "所属学生用户ID")
     private Long userId;
 
     /** 关联岗位画像ID */
-    @Excel(name = "关联岗位画像ID")
     private Long jobProfileId;
 
     /** 行业 */
@@ -43,11 +40,11 @@ public class InterviewSession extends BaseEntity implements UserOwned
     private String jobName;
 
     /** 难度(1初级 2中级 3高级) */
-    @Excel(name = "难度(1初级 2中级 3高级)")
+    @Excel(name = "难度", readConverterExp = "1=初级,2=中级,3=高级")
     private String difficulty;
 
-    /** 题型(行为面/技术面/HR面/case面) */
-    @Excel(name = "题型(行为面/技术面/HR面/case面)")
+    /** 题型(1行为面 2技术面 3HR面 4case面)，多选时以英文逗号拼接 */
+    @Excel(name = "题型")
     private String questionType;
 
     /** 题目总数 */
@@ -59,7 +56,6 @@ public class InterviewSession extends BaseEntity implements UserOwned
     private Integer answeredCount;
 
     /** 状态(0未开始 1进行中 2已完成 3已中断) */
-    @Excel(name = "状态(0未开始 1进行中 2已完成 3已中断)")
     private String status;
 
     /** 本场总分 */
@@ -67,13 +63,13 @@ public class InterviewSession extends BaseEntity implements UserOwned
     private BigDecimal score;
 
     /** 开始时间 */
-    @JsonFormat(pattern = "yyyy-MM-dd")
-    @Excel(name = "开始时间", width = 30, dateFormat = "yyyy-MM-dd")
+    @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss")
+    @Excel(name = "开始时间", width = 30, dateFormat = "yyyy-MM-dd HH:mm:ss")
     private Date startTime;
 
     /** 结束时间 */
-    @JsonFormat(pattern = "yyyy-MM-dd")
-    @Excel(name = "结束时间", width = 30, dateFormat = "yyyy-MM-dd")
+    @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss")
+    @Excel(name = "结束时间", width = 30, dateFormat = "yyyy-MM-dd HH:mm:ss")
     private Date endTime;
 
     /** 面试时长(秒) */

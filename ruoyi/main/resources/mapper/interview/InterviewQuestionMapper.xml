@@ -51,7 +51,7 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
     <insert id="insertInterviewQuestion" parameterType="InterviewQuestion" useGeneratedKeys="true" keyProperty="id">
         insert into interview_question
         <trim prefix="(" suffix=")" suffixOverrides=",">
-            <if test="sessionId != null">session_id,</if>
+            session_id,
             user_id,
             <if test="bankQuestionId != null">bank_question_id,</if>
             <if test="questionNo != null">question_no,</if>
@@ -71,7 +71,7 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
             <if test="remark != null">remark,</if>
          </trim>
         <trim prefix="values (" suffix=")" suffixOverrides=",">
-            <if test="sessionId != null">#{sessionId},</if>
+            #{sessionId},
             #{userId},
             <if test="bankQuestionId != null">#{bankQuestionId},</if>
             <if test="questionNo != null">#{questionNo},</if>
@@ -124,6 +124,14 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
         delete from interview_question where id in 
         <foreach item="id" collection="array" open="(" separator="," close=")">
             #{id}
+        </foreach>
+    </delete>
+
+    <!-- 删场次时按 session_id 级联清理 -->
+    <delete id="deleteInterviewQuestionBySessionIds" parameterType="String">
+        delete from interview_question where session_id in
+        <foreach item="sessionId" collection="array" open="(" separator="," close=")">
+            #{sessionId}
         </foreach>
     </delete>
 </mapper>

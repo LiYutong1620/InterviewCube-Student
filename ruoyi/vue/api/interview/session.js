@@ -42,3 +42,11 @@ export function delSession(id) {
     method: 'delete'
   })
 }
+
+// 提前结束一场面试（进行中 → 已中断）
+export function abortSession(id) {
+  return request({
+    url: '/interview/session/abort/' + id,
+    method: 'put'
+  })
+}

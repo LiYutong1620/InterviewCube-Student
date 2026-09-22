@@ -16,19 +16,18 @@ public class QuestionBank extends BaseEntity
     private static final long serialVersionUID = 1L;
 
     /** 主键ID */
-    @Excel(name = "主键ID")
     private Long id;
 
     /** 题干内容 */
     @Excel(name = "题干内容")
     private String questionContent;
 
-    /** 题型(行为面/技术面/HR面/case面) */
-    @Excel(name = "题型(行为面/技术面/HR面/case面)")
+    /** 题型(1行为面 2技术面 3HR面 4case面) */
+    @Excel(name = "题型", readConverterExp = "1=行为面,2=技术面,3=HR面,4=case面")
     private String questionType;
 
-    /** 行业 */
-    @Excel(name = "行业")
+    /** 行业(1技术 2产品 3运营 4财务 5教师) */
+    @Excel(name = "行业", readConverterExp = "1=技术,2=产品,3=运营,4=财务,5=教师")
     private String industry;
 
     /** 岗位名称 */
@@ -36,11 +35,11 @@ public class QuestionBank extends BaseEntity
     private String jobName;
 
     /** 难度(1初级 2中级 3高级) */
-    @Excel(name = "难度(1初级 2中级 3高级)")
+    @Excel(name = "难度", readConverterExp = "1=初级,2=中级,3=高级")
     private String difficulty;
 
-    /** 企业类型(BAT/央企/外企/其他) */
-    @Excel(name = "企业类型(BAT/央企/外企/其他)")
+    /** 企业类型(1BAT 2央企 3外企 4其他) */
+    @Excel(name = "企业类型", readConverterExp = "1=BAT,2=央企,3=外企,4=其他")
     private String companyType;
 
     /** 参考答案 */
@@ -50,11 +49,11 @@ public class QuestionBank extends BaseEntity
     private String keyPoints;
 
     /** 标签(逗号分隔) */
-    @Excel(name = "标签(逗号分隔)")
+    @Excel(name = "标签")
     private String tags;
 
-    /** 来源(真题/模拟/AI生成) */
-    @Excel(name = "来源(真题/模拟/AI生成)")
+    /** 来源(1真题 2模拟 3AI生成) */
+    @Excel(name = "来源", readConverterExp = "1=真题,2=模拟,3=AI生成")
     private String source;
 
     /** 被使用次数 */
@@ -62,7 +61,6 @@ public class QuestionBank extends BaseEntity
     private Integer useCount;
 
     /** 状态(0正常 1停用) */
-    @Excel(name = "状态(0正常 1停用)")
     private String status;
 
     /** 删除标志(0存在 2删除) */

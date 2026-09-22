@@ -55,8 +55,8 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
     <insert id="insertInterviewQa" parameterType="InterviewQa" useGeneratedKeys="true" keyProperty="id">
         insert into interview_qa
         <trim prefix="(" suffix=")" suffixOverrides=",">
-            <if test="sessionId != null">session_id,</if>
-            <if test="questionId != null">question_id,</if>
+            session_id,
+            question_id,
             user_id,
             <if test="questionContent != null">question_content,</if>
             <if test="answerContent != null">answer_content,</if>
@@ -78,8 +78,8 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
             <if test="remark != null">remark,</if>
          </trim>
         <trim prefix="values (" suffix=")" suffixOverrides=",">
-            <if test="sessionId != null">#{sessionId},</if>
-            <if test="questionId != null">#{questionId},</if>
+            #{sessionId},
+            #{questionId},
             #{userId},
             <if test="questionContent != null">#{questionContent},</if>
             <if test="answerContent != null">#{answerContent},</if>
@@ -137,6 +137,14 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
         delete from interview_qa where id in 
         <foreach item="id" collection="array" open="(" separator="," close=")">
             #{id}
+        </foreach>
+    </delete>
+
+    <!-- 删场次时按 session_id 级联清理 -->
+    <delete id="deleteInterviewQaBySessionIds" parameterType="String">
+        delete from interview_qa where session_id in
+        <foreach item="sessionId" collection="array" open="(" separator="," close=")">
+            #{sessionId}
         </foreach>
     </delete>
 </mapper>

@@ -19,7 +19,6 @@ public class InterviewReport extends BaseEntity implements UserOwned
     private static final long serialVersionUID = 1L;
 
     /** 主键ID */
-    @Excel(name = "主键ID")
     private Long id;
 
     /** 报告编号 */
@@ -27,11 +26,9 @@ public class InterviewReport extends BaseEntity implements UserOwned
     private String reportNo;
 
     /** 关联面试场次ID */
-    @Excel(name = "关联面试场次ID")
     private Long sessionId;
 
     /** 所属学生用户ID */
-    @Excel(name = "所属学生用户ID")
     private Long userId;
 
     /** 总分 */
@@ -74,20 +71,35 @@ public class InterviewReport extends BaseEntity implements UserOwned
     private String pdfUrl;
 
     /** 生成状态(0待生成 1生成中 2成功 3失败) */
-    @Excel(name = "生成状态(0待生成 1生成中 2成功 3失败)")
+    @Excel(name = "生成状态", readConverterExp = "0=待生成,1=生成中,2=生成成功,3=生成失败")
     private String generateStatus;
 
     /** 生成完成时间 */
     @JsonFormat(pattern = "yyyy-MM-dd")
-    @Excel(name = "生成完成时间", width = 30, dateFormat = "yyyy-MM-dd")
+    @Excel(name = "生成完成时间", width = 30, dateFormat = "yyyy-MM-dd HH:mm:ss")
     private Date generateTime;
 
     /** 状态(0正常 1停用) */
-    @Excel(name = "状态(0正常 1停用)")
     private String status;
 
     /** 删除标志(0存在 2删除) */
     private String delFlag;
+
+    // ------------------------------------------------------------
+    // 以下 3 个字段不是 interview_report 的列，是列表 / 详情查询
+    // 关联 interview_session 带出来的只读展示字段（列表页「关联场次」列要用）。
+    // 不挂 @Excel，也不参与 insert / update。
+    // ------------------------------------------------------------
+
+    /** 场次编号(取自 interview_session.session_no) */
+    private String sessionNo;
+
+    /** 岗位名称(取自 interview_session.job_name) */
+    private String jobName;
+
+    /** 场次开始时间(取自 interview_session.start_time) */
+    @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss")
+    private Date startTime;
 
     public void setId(Long id) 
     {
@@ -279,6 +291,36 @@ public class InterviewReport extends BaseEntity implements UserOwned
         return delFlag;
     }
 
+    public void setSessionNo(String sessionNo) 
+    {
+        this.sessionNo = sessionNo;
+    }
+
+    public String getSessionNo() 
+    {
+        return sessionNo;
+    }
+
+    public void setJobName(String jobName) 
+    {
+        this.jobName = jobName;
+    }
+
+    public String getJobName() 
+    {
+        return jobName;
+    }
+
+    public void setStartTime(Date startTime) 
+    {
+        this.startTime = startTime;
+    }
+
+    public Date getStartTime() 
+    {
+        return startTime;
+    }
+
     @Override
     public String toString() {
         return new ToStringBuilder(this,ToStringStyle.MULTI_LINE_STYLE)
@@ -301,6 +343,9 @@ public class InterviewReport extends BaseEntity implements UserOwned
             .append("generateTime", getGenerateTime())
             .append("status", getStatus())
             .append("delFlag", getDelFlag())
+            .append("sessionNo", getSessionNo())
+            .append("jobName", getJobName())
+            .append("startTime", getStartTime())
             .append("createBy", getCreateBy())
             .append("createTime", getCreateTime())
             .append("updateBy", getUpdateBy())
