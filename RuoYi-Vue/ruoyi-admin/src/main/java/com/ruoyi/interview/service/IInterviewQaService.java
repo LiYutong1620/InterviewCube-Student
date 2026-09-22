@@ -44,6 +44,19 @@ public interface IInterviewQaService
     public int updateInterviewQa(InterviewQa interviewQa);
 
     /**
+     * 提交一道题的作答（作答页唯一写入口）
+     * 
+     * 白名单写入：只认 sessionId / questionId / answerContent / answerType / duration，
+     * 其余字段（user_id / question_content / status / score / ai_comment …）一律由后端带入，
+     * 前端传了也会被丢掉；同一题重复提交按覆盖处理。
+     * 提交后若该场题目已全部作答，由本方法把场次置为「已完成」。
+     * 
+     * @param interviewQa 作答提交体
+     * @return 落库后的作答记录
+     */
+    public InterviewQa submitAnswer(InterviewQa interviewQa);
+
+    /**
      * 批量删除面试问答
      * 
      * @param ids 需要删除的面试问答主键集合

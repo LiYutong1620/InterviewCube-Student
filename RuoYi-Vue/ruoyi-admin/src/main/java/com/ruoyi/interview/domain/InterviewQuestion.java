@@ -16,26 +16,23 @@ public class InterviewQuestion extends BaseEntity implements UserOwned
     private static final long serialVersionUID = 1L;
 
     /** 主键ID */
-    @Excel(name = "主键ID")
     private Long id;
 
     /** 所属面试场次ID */
-    @Excel(name = "所属面试场次ID")
     private Long sessionId;
 
     /** 所属学生用户ID */
-    @Excel(name = "所属学生用户ID")
     private Long userId;
 
     /** 关联题库题目ID(可为空) */
     private Long bankQuestionId;
 
     /** 题号(第几题) */
-    @Excel(name = "题号(第几题)")
+    @Excel(name = "题号")
     private Integer questionNo;
 
     /** 题型(行为面/技术面/HR面/case面) */
-    @Excel(name = "题型(行为面/技术面/HR面/case面)")
+    @Excel(name = "题型", readConverterExp = "1=行为面,2=技术面,3=HR面,4=case面")
     private String questionType;
 
     /** 题干内容 */
@@ -49,18 +46,17 @@ public class InterviewQuestion extends BaseEntity implements UserOwned
     private String keyPoints;
 
     /** 是否追问(0否 1是) */
-    @Excel(name = "是否追问(0否 1是)")
+    @Excel(name = "是否追问", readConverterExp = "0=否,1=是")
     private String isFollowUp;
 
     /** 父题目ID(追问时使用) */
     private Long parentQuestionId;
 
     /** 来源(1AI生成 2题库抽取 3简历解析) */
-    @Excel(name = "来源(1AI生成 2题库抽取 3简历解析)")
+    @Excel(name = "来源", readConverterExp = "1=AI生成,2=题库抽取,3=简历解析")
     private String source;
 
     /** 状态(0正常 1停用) */
-    @Excel(name = "状态(0正常 1停用)")
     private String status;
 
     /** 删除标志(0存在 2删除) */

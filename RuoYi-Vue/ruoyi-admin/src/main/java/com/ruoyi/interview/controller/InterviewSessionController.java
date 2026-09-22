@@ -73,7 +73,9 @@ public class InterviewSessionController extends BaseController
     }
 
     /**
-     * 新增模拟面试场次
+     * 新增模拟面试场次（=「开始面试」）
+     * 前端只传 jobProfileId / questionType / totalCount，其余字段由后端生成；
+     * 返回生成的场次实体（含 id、sessionNo），前端据此跳到作答页
      */
     @PreAuthorize("@ss.hasPermi('interview:session:add')")
     @Log(title = "模拟面试场次", businessType = BusinessType.INSERT)
@@ -81,7 +83,8 @@ public class InterviewSessionController extends BaseController
     public AjaxResult add(@RequestBody InterviewSession interviewSession)
     {
         StudentDataScopeUtils.bindOwner(interviewSession);
-        return toAjax(interviewSessionService.insertInterviewSession(interviewSession));
+        interviewSessionService.insertInterviewSession(interviewSession);
+        return success(interviewSession);
     }
 
     /**
@@ -94,6 +97,18 @@ public class InterviewSessionController extends BaseController
     {
         StudentDataScopeUtils.checkOwner(interviewSessionService.selectInterviewSessionById(interviewSession.getId()), "模拟面试场次");
         return toAjax(interviewSessionService.updateInterviewSession(interviewSession));
+    }
+
+    /**
+     * 提前结束一场面试（进行中 → 已中断）
+     * 作答页的「提前结束」入口；已完成 / 已中断的场次不允许再改
+     */
+    @PreAuthorize("@ss.hasPermi('interview:session:edit')")
+    @Log(title = "模拟面试场次", businessType = BusinessType.UPDATE)
+    @PutMapping("/abort/{id}")
+    public AjaxResult abort(@PathVariable("id") Long id)
+    {
+        return success(interviewSessionService.abortInterviewSession(id));
     }
 
     /**

@@ -1,14 +1,6 @@
 <template>
   <div class="app-container">
-    <el-form :model="queryParams" ref="queryRef" :inline="true" v-show="showSearch" label-width="68px">
-      <el-form-item label="面试场次编号" prop="sessionNo">
-        <el-input
-          v-model="queryParams.sessionNo"
-          placeholder="请输入面试场次编号"
-          clearable
-          @keyup.enter="handleQuery"
-        />
-      </el-form-item>
+    <el-form :model="queryParams" ref="queryRef" :inline="true" v-show="showSearch" label-width="80px">
       <el-form-item label="岗位名称" prop="jobName">
         <el-input
           v-model="queryParams.jobName"
@@ -17,25 +9,15 @@
           @keyup.enter="handleQuery"
         />
       </el-form-item>
-      <el-form-item label="开始时间" style="width: 308px">
-        <el-date-picker
-          v-model="daterangeStartTime"
-          value-format="YYYY-MM-DD"
-          type="daterange"
-          range-separator="-"
-          start-placeholder="开始日期"
-          end-placeholder="结束日期"
-        ></el-date-picker>
-      </el-form-item>
-      <el-form-item label="结束时间" style="width: 308px">
-        <el-date-picker
-          v-model="daterangeEndTime"
-          value-format="YYYY-MM-DD"
-          type="daterange"
-          range-separator="-"
-          start-placeholder="开始日期"
-          end-placeholder="结束日期"
-        ></el-date-picker>
+      <el-form-item label="状态" prop="status">
+        <el-select v-model="queryParams.status" placeholder="面试状态" clearable style="width: 160px">
+          <el-option
+            v-for="dict in interview_session_status"
+            :key="dict.value"
+            :label="dict.label"
+            :value="dict.value"
+          />
+        </el-select>
       </el-form-item>
       <el-form-item>
         <el-button type="primary" icon="Search" @click="handleQuery">搜索</el-button>
@@ -49,29 +31,9 @@
           type="primary"
           plain
           icon="Plus"
-          @click="handleAdd"
+          @click="handleStart"
           v-hasPermi="['interview:session:add']"
-        >新增</el-button>
-      </el-col>
-      <el-col :span="1.5">
-        <el-button
-          type="success"
-          plain
-          icon="Edit"
-          :disabled="single"
-          @click="handleUpdate"
-          v-hasPermi="['interview:session:edit']"
-        >修改</el-button>
-      </el-col>
-      <el-col :span="1.5">
-        <el-button
-          type="danger"
-          plain
-          icon="Delete"
-          :disabled="multiple"
-          @click="handleDelete"
-          v-hasPermi="['interview:session:remove']"
-        >删除</el-button>
+        >开始面试</el-button>
       </el-col>
       <el-col :span="1.5">
         <el-button
@@ -85,52 +47,87 @@
       <right-toolbar v-model:showSearch="showSearch" @queryTable="getList"></right-toolbar>
     </el-row>
 
-    <el-table v-loading="loading" :data="sessionList" @selection-change="handleSelectionChange">
-      <el-table-column type="selection" width="55" align="center" />
-      <el-table-column label="主键ID" align="center" prop="id" />
-      <el-table-column label="面试场次编号" align="center" prop="sessionNo" />
-      <el-table-column label="所属学生用户ID" align="center" prop="userId" />
-      <el-table-column label="关联岗位画像ID" align="center" prop="jobProfileId" />
-      <el-table-column label="行业" align="center" prop="industry" />
-      <el-table-column label="岗位名称" align="center" prop="jobName" />
-      <el-table-column label="难度(1初级 2中级 3高级)" align="center" prop="difficulty" />
-      <el-table-column label="题型(行为面/技术面/HR面/case面)" align="center" prop="questionType" />
-      <el-table-column label="题目总数" align="center" prop="totalCount" />
-      <el-table-column label="已答题数" align="center" prop="answeredCount" />
-      <el-table-column label="状态(0未开始 1进行中 2已完成 3已中断)" align="center" prop="status" />
-      <el-table-column label="本场总分" align="center" prop="score" />
-      <el-table-column label="开始时间" align="center" prop="startTime" width="180">
+    <el-table v-loading="loading" :data="sessionList">
+      <el-table-column label="场次编号" align="center" width="200">
         <template #default="scope">
-          <span>{{ parseTime(scope.row.startTime, '{y}-{m}-{d}') }}</span>
+          <el-link type="primary" :underline="false" @click="handleView(scope.row)">
+            {{ scope.row.sessionNo }}
+          </el-link>
         </template>
       </el-table-column>
-      <el-table-column label="结束时间" align="center" prop="endTime" width="180">
+      <el-table-column label="岗位名称" align="center" prop="jobName" :show-overflow-tooltip="true" />
+      <el-table-column label="难度" align="center" width="90">
         <template #default="scope">
-          <span>{{ parseTime(scope.row.endTime, '{y}-{m}-{d}') }}</span>
+          <dict-tag :options="student_difficulty" :value="scope.row.difficulty" />
         </template>
       </el-table-column>
-      <el-table-column label="面试时长(秒)" align="center" prop="duration" />
-      <el-table-column label="创建者" align="center" prop="createBy" />
-      <el-table-column label="创建时间" align="center" prop="createTime" width="180">
+      <el-table-column label="题型" align="center" width="210">
         <template #default="scope">
-          <span>{{ parseTime(scope.row.createTime, '{y}-{m}-{d}') }}</span>
+          <template v-if="questionTypeLabels(scope.row.questionType).length">
+            <el-tag
+              v-for="label in questionTypeLabels(scope.row.questionType)"
+              :key="label"
+              size="small"
+              class="mr4"
+            >{{ label }}</el-tag>
+          </template>
+          <span v-else>-</span>
         </template>
       </el-table-column>
-      <el-table-column label="更新者" align="center" prop="updateBy" />
-      <el-table-column label="更新时间" align="center" prop="updateTime" width="180">
+      <el-table-column label="进度" align="center" width="90">
         <template #default="scope">
-          <span>{{ parseTime(scope.row.updateTime, '{y}-{m}-{d}') }}</span>
+          <span>{{ scope.row.answeredCount || 0 }} / {{ scope.row.totalCount || 0 }}</span>
         </template>
       </el-table-column>
-      <el-table-column label="操作" align="center" class-name="small-padding fixed-width">
+      <el-table-column label="状态" align="center" width="100">
         <template #default="scope">
-          <el-button link type="primary" icon="View" @click="handleViewData(scope.row)" v-hasPermi="['interview:session:query']">详情</el-button>
-          <el-button link type="primary" icon="Edit" @click="handleUpdate(scope.row)" v-hasPermi="['interview:session:edit']">修改</el-button>
-          <el-button link type="primary" icon="Delete" @click="handleDelete(scope.row)" v-hasPermi="['interview:session:remove']">删除</el-button>
+          <dict-tag :options="interview_session_status" :value="scope.row.status" />
+        </template>
+      </el-table-column>
+      <el-table-column label="本场总分" align="center" width="100">
+        <template #default="scope">
+          <span>{{ scope.row.score == null ? '-' : scope.row.score }}</span>
+        </template>
+      </el-table-column>
+      <el-table-column label="开始时间" align="center" width="170">
+        <template #default="scope">
+          <span>{{ parseTime(scope.row.startTime, '{y}-{m}-{d} {h}:{i}') }}</span>
+        </template>
+      </el-table-column>
+      <el-table-column label="操作" align="center" width="250" class-name="small-padding fixed-width">
+        <template #default="scope">
+          <el-button
+            v-if="isOngoing(scope.row)"
+            link
+            type="primary"
+            icon="VideoPlay"
+            @click="handleAnswer(scope.row)"
+          >继续作答</el-button>
+          <el-button
+            v-if="isFinished(scope.row)"
+            link
+            type="primary"
+            icon="DataAnalysis"
+            @click="handleReport(scope.row)"
+          >查看报告</el-button>
+          <el-button
+            v-if="isFinished(scope.row) || isInterrupted(scope.row)"
+            link
+            type="primary"
+            icon="Document"
+            @click="handleReview(scope.row)"
+          >回顾题目</el-button>
+          <el-button
+            link
+            type="danger"
+            icon="Delete"
+            @click="handleDelete(scope.row)"
+            v-hasPermi="['interview:session:remove']"
+          >删除</el-button>
         </template>
       </el-table-column>
     </el-table>
-    
+
     <pagination
       v-show="total>0"
       :total="total"
@@ -141,81 +138,52 @@
 
     <!-- 模拟面试场次详情抽屉 -->
     <session-view-drawer ref="sessionViewRef" />
-    <!-- 添加或修改模拟面试场次对话框 -->
-    <el-dialog :title="title" v-model="open" width="800px" append-to-body>
-      <el-form ref="sessionRef" :model="form" :rules="rules" label-width="100px">
-        <el-row>
-          <el-col :span="12">
-            <el-form-item label="面试场次编号" prop="sessionNo">
-              <el-input v-model="form.sessionNo" placeholder="请输入面试场次编号" />
-            </el-form-item>
-          </el-col>
-          <el-col :span="12">
-            <el-form-item label="关联岗位画像ID" prop="jobProfileId">
-              <el-input v-model="form.jobProfileId" placeholder="请输入关联岗位画像ID" />
-            </el-form-item>
-          </el-col>
-          <el-col :span="12">
-            <el-form-item label="岗位名称" prop="jobName">
-              <el-input v-model="form.jobName" placeholder="请输入岗位名称" />
-            </el-form-item>
-          </el-col>
-          <el-col :span="12">
-            <el-form-item label="题目总数" prop="totalCount">
-              <el-input v-model="form.totalCount" placeholder="请输入题目总数" />
-            </el-form-item>
-          </el-col>
-          <el-col :span="12">
-            <el-form-item label="已答题数" prop="answeredCount">
-              <el-input v-model="form.answeredCount" placeholder="请输入已答题数" />
-            </el-form-item>
-          </el-col>
-          <el-col :span="12">
-            <el-form-item label="本场总分" prop="score">
-              <el-input v-model="form.score" placeholder="请输入本场总分" />
-            </el-form-item>
-          </el-col>
-          <el-col :span="12">
-            <el-form-item label="开始时间" prop="startTime">
-              <el-date-picker clearable
-                v-model="form.startTime"
-                type="date"
-                value-format="YYYY-MM-DD"
-                placeholder="请选择开始时间">
-              </el-date-picker>
-            </el-form-item>
-          </el-col>
-          <el-col :span="12">
-            <el-form-item label="结束时间" prop="endTime">
-              <el-date-picker clearable
-                v-model="form.endTime"
-                type="date"
-                value-format="YYYY-MM-DD"
-                placeholder="请选择结束时间">
-              </el-date-picker>
-            </el-form-item>
-          </el-col>
-          <el-col :span="12">
-            <el-form-item label="面试时长(秒)" prop="duration">
-              <el-input v-model="form.duration" placeholder="请输入面试时长(秒)" />
-            </el-form-item>
-          </el-col>
-          <el-col :span="12">
-            <el-form-item label="关联复盘报告ID" prop="reportId">
-              <el-input v-model="form.reportId" placeholder="请输入关联复盘报告ID" />
-            </el-form-item>
-          </el-col>
-          <el-col :span="24">
-            <el-form-item label="备注" prop="remark">
-              <el-input v-model="form.remark" type="textarea" placeholder="请输入内容" />
-            </el-form-item>
-          </el-col>
-        </el-row>
+
+    <!-- 开始面试：只选目标岗位 + 题型 + 题目数，其余字段由后端生成 -->
+    <el-dialog title="开始面试" v-model="startOpen" width="560px" append-to-body>
+      <el-form ref="startRef" :model="startForm" :rules="startRules" label-width="90px">
+        <el-form-item label="目标岗位" prop="jobProfileId">
+          <el-select
+            v-model="startForm.jobProfileId"
+            placeholder="请选择目标岗位"
+            style="width: 100%"
+            :loading="profileLoading"
+          >
+            <el-option
+              v-for="item in jobProfileList"
+              :key="item.id"
+              :label="profileLabel(item)"
+              :value="item.id"
+            />
+          </el-select>
+          <div v-if="!profileLoading && !jobProfileList.length" class="form-tip">
+            还没有可用的岗位画像，请先到「学生岗位画像」新建一个
+          </div>
+        </el-form-item>
+        <el-form-item label="题型" prop="questionType">
+          <el-select
+            v-model="startForm.questionType"
+            multiple
+            placeholder="不选表示不限题型"
+            style="width: 100%"
+          >
+            <el-option
+              v-for="dict in interview_question_type"
+              :key="dict.value"
+              :label="dict.label"
+              :value="dict.value"
+            />
+          </el-select>
+        </el-form-item>
+        <el-form-item label="题目数" prop="totalCount">
+          <el-input-number v-model="startForm.totalCount" :min="1" :max="20" controls-position="right" />
+          <div class="form-tip">题库中符合条件的题目不足时，按实际抽到的数量出题</div>
+        </el-form-item>
       </el-form>
       <template #footer>
         <div class="dialog-footer">
-          <el-button type="primary" @click="submitForm">确 定</el-button>
-          <el-button @click="cancel">取 消</el-button>
+          <el-button type="primary" :loading="starting" @click="submitStart">开始面试</el-button>
+          <el-button @click="startOpen = false">取 消</el-button>
         </div>
       </template>
     </el-dialog>
@@ -223,58 +191,60 @@
 </template>
 
 <script setup name="Session">
-import { listSession, getSession, delSession, addSession, updateSession } from "@/api/interview/session"
+import { listSession, delSession, addSession } from "@/api/interview/session"
+import { listJobprofile } from "@/api/interview/jobprofile"
 import SessionViewDrawer from "./view"
 
 const { proxy } = getCurrentInstance()
+const router = useRouter()
+const {
+  interview_session_status,
+  interview_question_type,
+  student_difficulty,
+  student_industry
+} = useDict(
+  'interview_session_status',
+  'interview_question_type',
+  'student_difficulty',
+  'student_industry'
+)
+
+/** 未开始 / 进行中的场次都可以继续作答 */
+const ONGOING_STATUS = ['0', '1']
 
 const sessionList = ref([])
-const open = ref(false)
 const loading = ref(true)
 const showSearch = ref(true)
-const ids = ref([])
-const single = ref(true)
-const multiple = ref(true)
 const total = ref(0)
-const title = ref("")
-const daterangeStartTime = ref([])
-const daterangeEndTime = ref([])
+
+const startOpen = ref(false)
+const starting = ref(false)
+const profileLoading = ref(false)
+const jobProfileList = ref([])
 
 const data = reactive({
-  form: {},
   queryParams: {
     pageNum: 1,
     pageSize: 10,
-    sessionNo: undefined,
-    industry: undefined,
     jobName: undefined,
-    difficulty: undefined,
-    questionType: undefined,
-    status: undefined,
-    startTime: undefined,
-    endTime: undefined,
+    status: undefined
   },
-  rules: {
-    sessionNo: [
-      { required: true, message: "面试场次编号不能为空", trigger: "blur" }
-    ],
+  startForm: {
+    jobProfileId: undefined,
+    questionType: [],
+    totalCount: 5
+  },
+  startRules: {
+    jobProfileId: [{ required: true, message: "请选择目标岗位", trigger: "change" }],
+    totalCount: [{ required: true, message: "请输入题目数", trigger: "blur" }]
   }
 })
 
-const { queryParams, form, rules } = toRefs(data)
+const { queryParams, startForm, startRules } = toRefs(data)
 
-/** 查询模拟面试场次列表 */
+/** 查询我的面试场次列表（数据范围由后端按登录用户隔离） */
 function getList() {
   loading.value = true
-  queryParams.value.params = {}
-  if (null != daterangeStartTime.value && '' != daterangeStartTime.value) {
-    queryParams.value.params["beginStartTime"] = daterangeStartTime.value[0]
-    queryParams.value.params["endStartTime"] = daterangeStartTime.value[1]
-  }
-  if (null != daterangeEndTime.value && '' != daterangeEndTime.value) {
-    queryParams.value.params["beginEndTime"] = daterangeEndTime.value[0]
-    queryParams.value.params["endEndTime"] = daterangeEndTime.value[1]
-  }
   listSession(queryParams.value).then(response => {
     sessionList.value = response.rows
     total.value = response.total
@@ -282,39 +252,46 @@ function getList() {
   })
 }
 
-/** 取消按钮 */
-function cancel() {
-  open.value = false
-  reset()
+/** 字典翻译，取不到时原样返回 */
+function dictLabel(options, value) {
+  const hit = options.value.find(dict => dict.value === value)
+  return hit ? hit.label : value
 }
 
-/** 表单重置 */
-function reset() {
-  form.value = {
-    id: null,
-    sessionNo: null,
-    userId: null,
-    jobProfileId: null,
-    industry: null,
-    jobName: null,
-    difficulty: null,
-    questionType: null,
-    totalCount: null,
-    answeredCount: null,
-    status: null,
-    score: null,
-    startTime: null,
-    endTime: null,
-    duration: null,
-    reportId: null,
-    delFlag: null,
-    createBy: null,
-    createTime: null,
-    updateBy: null,
-    updateTime: null,
-    remark: null
+/** 题型是多选后以英文逗号拼接的，逐项翻译成标签 */
+function questionTypeLabels(raw) {
+  if (!raw) {
+    return []
   }
-  proxy.resetForm("sessionRef")
+  return String(raw)
+    .split(',')
+    .map(item => item.trim())
+    .filter(item => item)
+    .map(item => dictLabel(interview_question_type, item))
+}
+
+/** 岗位画像下拉的展示文案：行业 · 岗位名 · 难度 */
+function profileLabel(item) {
+  return [
+    dictLabel(student_industry, item.industry),
+    item.jobName,
+    dictLabel(student_difficulty, item.difficulty)
+  ].filter(text => text).join(' · ')
+}
+
+/** 未开始 / 进行中：还可以继续作答 */
+function isOngoing(row) {
+  return ONGOING_STATUS.includes(row.status)
+}
+
+/** 已完成：可以看报告 */
+function isFinished(row) {
+  return row.status === '2'
+}
+
+/** 已中断：作答记录还在，可以回顾题目 */
+function isInterrupted(row) {
+  return row.status === '3'
 }
 
 /** 搜索按钮操作 */
@@ -325,72 +302,85 @@ function handleQuery() {
 
 /** 重置按钮操作 */
 function resetQuery() {
-  daterangeStartTime.value = []
-  daterangeEndTime.value = []
   proxy.resetForm("queryRef")
   handleQuery()
 }
 
-/** 多选框选中数据 */
-function handleSelectionChange(selection) {
-  ids.value = selection.map(item => item.id)
-  single.value = selection.length != 1
-  multiple.value = !selection.length
+/** 详情抽屉 */
+function handleView(row) {
+  proxy.$refs["sessionViewRef"].open(row.id)
 }
 
-/** 新增按钮操作 */
-function handleAdd() {
-  reset()
-  open.value = true
-  title.value = "添加模拟面试场次"
+/** 继续作答：带 sessionId 下钻到作答页 */
+function handleAnswer(row) {
+  router.push({ path: '/student/qa', query: { sessionId: row.id } })
 }
 
-/** 修改按钮操作 */
-function handleUpdate(row) {
-  reset()
-  const _id = row.id || ids.value
-  getSession(_id).then(response => {
-    form.value = response.data
-    open.value = true
-    title.value = "修改模拟面试场次"
+/** 查看报告：带 sessionId 下钻到复盘报告页 */
+function handleReport(row) {
+  router.push({ path: '/student/report', query: { sessionId: row.id } })
+}
+
+/** 回顾题目：带 sessionId 下钻到题目回顾页 */
+function handleReview(row) {
+  router.push({ path: '/student/question', query: { sessionId: row.id } })
+}
+
+/** 打开「开始面试」对话框 */
+function handleStart() {
+  startForm.value = {
+    jobProfileId: undefined,
+    questionType: [],
+    totalCount: 5
+  }
+  startOpen.value = true
+  loadJobProfiles()
+}
+
+/** 拉取自己的岗位画像（只取正常状态） */
+function loadJobProfiles() {
+  profileLoading.value = true
+  listJobprofile({ pageNum: 1, pageSize: 100, status: '0' }).then(response => {
+    jobProfileList.value = response.rows || []
+  }).finally(() => {
+    profileLoading.value = false
   })
 }
 
-/** 提交按钮 */
-function submitForm() {
-  proxy.$refs["sessionRef"].validate(valid => {
-    if (valid) {
-      if (form.value.id != null) {
-        updateSession(form.value).then(() => {
-          proxy.$modal.msgSuccess("修改成功")
-          open.value = false
-          getList()
-        })
-      } else {
-        addSession(form.value).then(() => {
-          proxy.$modal.msgSuccess("新增成功")
-          open.value = false
-          getList()
-        })
-      }
+/** 提交开始面试：后端生成场次编号 / 归属 / 状态 / 开始时间，并从题库抽题 */
+function submitStart() {
+  proxy.$refs["startRef"].validate(valid => {
+    if (!valid) {
+      return
     }
+    starting.value = true
+    addSession({
+      jobProfileId: startForm.value.jobProfileId,
+      questionType: startForm.value.questionType.join(','),
+      totalCount: startForm.value.totalCount
+    }).then(response => {
+      const created = response.data || {}
+      startOpen.value = false
+      proxy.$modal.msgSuccess('面试已开始，本场共 ' + (created.totalCount || 0) + ' 题')
+      getList()
+      // S1 遗留：建完场次直接进作答页，把 sessionId 带过去
+      if (created.id) {
+        router.push({ path: '/student/qa', query: { sessionId: created.id } })
+      }
+    }).finally(() => {
+      starting.value = false
+    })
   })
 }
 
-/** 删除按钮操作 */
+/** 删除按钮操作（后端会级联删除该场的题目 / 作答 / 报告） */
 function handleDelete(row) {
-  const _ids = row.id || ids.value
-  proxy.$modal.confirm('是否确认删除模拟面试场次编号为"' + _ids + '"的数据项？').then(function() {
-    return delSession(_ids)
+  proxy.$modal.confirm('是否确认删除场次「' + row.sessionNo + '」？该场次的题目、作答记录与复盘报告将一并删除。').then(function() {
+    return delSession(row.id)
   }).then(() => {
     getList()
     proxy.$modal.msgSuccess("删除成功")
   }).catch(() => {})
-}
-
-/** 详情按钮操作 */
-function handleViewData(row) {
-  proxy.$refs["sessionViewRef"].open(row.id)
 }
 
 /** 导出按钮操作 */
@@ -402,3 +392,16 @@ function handleExport() {
 
 getList()
 </script>
+
+<style scoped>
+.mr4 {
+  margin-right: 4px;
+}
+
+.form-tip {
+  margin-top: 4px;
+  font-size: 12px;
+  line-height: 1.5;
+  color: #909399;
+}
+</style>

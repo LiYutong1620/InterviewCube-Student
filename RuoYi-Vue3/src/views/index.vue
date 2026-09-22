@@ -63,7 +63,8 @@ const nickName = computed(() => userStore.nickName || userStore.name || "同学"
 const avatar = computed(() => userStore.avatar || "");
 
 function goInterview() {
-  router.push("/student/qa");
+  // 进入「模拟面试场次」页，那里才有「开始面试」入口
+  router.push("/student/session");
 }
 
 function goResume() {

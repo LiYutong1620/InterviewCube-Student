@@ -97,6 +97,20 @@ public class InterviewReportController extends BaseController
     }
 
     /**
+     * 手工填分（阶段一的演示入口，阶段三换成 AI 自动生成）
+     * 只认 sessionId + 五个维度 + 总结 / 薄弱点 / 改进建议；
+     * 总分由后端按五维平均算出，report_no / user_id / generate_status / generate_time 也由后端写；
+     * 该场次还没有报告壳时先补建，兼容 S4 之前就已完成的场次
+     */
+    @PreAuthorize("@ss.hasPermi('interview:report:edit')")
+    @Log(title = "面试复盘报告", businessType = BusinessType.UPDATE)
+    @PostMapping("/fill")
+    public AjaxResult fill(@RequestBody InterviewReport interviewReport)
+    {
+        return success(interviewReportService.fillReport(interviewReport));
+    }
+
+    /**
      * 删除面试复盘报告
      */
     @PreAuthorize("@ss.hasPermi('interview:report:remove')")

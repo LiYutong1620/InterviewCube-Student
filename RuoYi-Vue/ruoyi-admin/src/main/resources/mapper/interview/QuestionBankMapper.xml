@@ -129,4 +129,28 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
             #{id}
         </foreach>
     </delete>
+
+    <!-- 随机抽题：只取正常状态的题；行业 / 难度 / 题型为空则不参与过滤 -->
+    <select id="selectRandomQuestions" resultMap="QuestionBankResult">
+        <include refid="selectQuestionBankVo"/>
+        where status = '0'
+        <if test="industry != null and industry != ''"> and industry = #{industry}</if>
+        <if test="difficulty != null and difficulty != ''"> and difficulty = #{difficulty}</if>
+        <if test="questionTypes != null and questionTypes.size() > 0">
+            and question_type in
+            <foreach item="questionType" collection="questionTypes" open="(" separator="," close=")">#{questionType}</foreach>
+        </if>
+        <if test="excludeIds != null and excludeIds.size() > 0">
+            and id not in
+            <foreach item="excludeId" collection="excludeIds" open="(" separator="," close=")">#{excludeId}</foreach>
+        </if>
+        order by rand()
+        limit #{limit}
+    </select>
+
+    <!-- 被使用次数累加 -->
+    <update id="increaseUseCount">
+        update question_bank set use_count = ifnull(use_count, 0) + 1 where id in
+        <foreach item="id" collection="ids" open="(" separator="," close=")">#{id}</foreach>
+    </update>
 </mapper>

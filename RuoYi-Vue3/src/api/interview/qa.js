@@ -42,3 +42,12 @@ export function delQa(id) {
     method: 'delete'
   })
 }
+
+// 提交一道题的作答（作答页唯一写入口）
+export function submitQa(data) {
+  return request({
+    url: '/interview/qa/submit',
+    method: 'post',
+    data: data
+  })
+}

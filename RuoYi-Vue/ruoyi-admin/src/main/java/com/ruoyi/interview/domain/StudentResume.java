@@ -18,11 +18,9 @@ public class StudentResume extends BaseEntity implements UserOwned
     private static final long serialVersionUID = 1L;
 
     /** 主键ID */
-    @Excel(name = "主键ID")
     private Long id;
 
     /** 所属学生用户ID */
-    @Excel(name = "所属学生用户ID")
     private Long userId;
 
     /** 简历名称 */
@@ -33,22 +31,21 @@ public class StudentResume extends BaseEntity implements UserOwned
     private String fileUrl;
 
     /** 文件类型(pdf/doc/docx/jpg/png) */
-    @Excel(name = "文件类型(pdf/doc/docx/jpg/png)")
+    @Excel(name = "文件类型")
     private String fileType;
 
     /** 文件大小(字节) */
     private Long fileSize;
 
     /** 来源(1本地上传 2拍照导入) */
-    @Excel(name = "来源(1本地上传 2拍照导入)")
+    @Excel(name = "来源", readConverterExp = "1=本地上传,2=拍照导入")
     private String sourceType;
 
     /** 是否默认(0否 1是) */
-    @Excel(name = "是否默认(0否 1是)")
+    @Excel(name = "是否默认", readConverterExp = "0=否,1=是")
     private String isDefault;
 
     /** 解析状态(0未解析 1解析中 2解析成功 3解析失败) */
-    @Excel(name = "解析状态(0未解析 1解析中 2解析成功 3解析失败)")
     private String parseStatus;
 
     /** AI解析结果(JSON) */
@@ -56,11 +53,9 @@ public class StudentResume extends BaseEntity implements UserOwned
 
     /** 解析完成时间 */
     @JsonFormat(pattern = "yyyy-MM-dd")
-    @Excel(name = "解析完成时间", width = 30, dateFormat = "yyyy-MM-dd")
     private Date parseTime;
 
     /** 状态(0正常 1停用) */
-    @Excel(name = "状态(0正常 1停用)")
     private String status;
 
     /** 删除标志(0存在 2删除) */

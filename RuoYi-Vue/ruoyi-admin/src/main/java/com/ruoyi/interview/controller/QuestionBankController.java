@@ -16,8 +16,10 @@ import com.ruoyi.common.annotation.Log;
 import com.ruoyi.common.core.controller.BaseController;
 import com.ruoyi.common.core.domain.AjaxResult;
 import com.ruoyi.common.enums.BusinessType;
+import com.ruoyi.common.exception.ServiceException;
 import com.ruoyi.interview.domain.QuestionBank;
 import com.ruoyi.interview.service.IQuestionBankService;
+import com.ruoyi.interview.utils.StudentDataScopeUtils;
 import com.ruoyi.common.utils.poi.ExcelUtil;
 import com.ruoyi.common.core.page.TableDataInfo;
 
@@ -36,11 +38,13 @@ public class QuestionBankController extends BaseController
 
     /**
      * 查询题库题目列表
+     * 共享题库：没有全量数据权限时只可见「正常」的题目，停用的题目对学生隐藏
      */
     @PreAuthorize("@ss.hasPermi('interview:bank:list')")
     @GetMapping("/list")
     public TableDataInfo list(QuestionBank questionBank)
     {
+        scopeVisibleStatus(questionBank);
         startPage();
         List<QuestionBank> list = questionBankService.selectQuestionBankList(questionBank);
         return getDataTable(list);
@@ -48,12 +52,14 @@ public class QuestionBankController extends BaseController
 
     /**
      * 导出题库题目列表
+     * 与列表同样受可见状态限制，避免导出绕过隐藏
      */
     @PreAuthorize("@ss.hasPermi('interview:bank:export')")
     @Log(title = "题库题目", businessType = BusinessType.EXPORT)
     @PostMapping("/export")
     public void export(HttpServletResponse response, QuestionBank questionBank)
     {
+        scopeVisibleStatus(questionBank);
         List<QuestionBank> list = questionBankService.selectQuestionBankList(questionBank);
         ExcelUtil<QuestionBank> util = new ExcelUtil<QuestionBank>(QuestionBank.class);
         util.exportExcel(response, list, "题库题目数据");
@@ -61,12 +67,32 @@ public class QuestionBankController extends BaseController
 
     /**
      * 获取题库题目详细信息
+     * 停用的题目对学生不可见，直接按「不存在」处理，避免用猜 id 的方式绕过列表过滤
      */
     @PreAuthorize("@ss.hasPermi('interview:bank:query')")
     @GetMapping(value = "/{id}")
     public AjaxResult getInfo(@PathVariable("id") Long id)
     {
-        return success(questionBankService.selectQuestionBankById(id));
+        QuestionBank questionBank = questionBankService.selectQuestionBankById(id);
+        if (questionBank == null || !StudentDataScopeUtils.canViewStatus(questionBank.getStatus()))
+        {
+            throw new ServiceException("数据不存在或已删除");
+        }
+        return success(questionBank);
+    }
+
+    /**
+     * 共享题库的可见状态过滤：没有全量数据权限时只查「正常」的题目
+     * 与归属隔离不同 —— question_bank 没有 user_id，靠 status 控制学生可见性
+     *
+     * @param questionBank 查询条件对象
+     */
+    private void scopeVisibleStatus(QuestionBank questionBank)
+    {
+        if (!StudentDataScopeUtils.canViewAll())
+        {
+            questionBank.setStatus(StudentDataScopeUtils.STATUS_NORMAL);
+        }
     }
 
     /**

@@ -19,31 +19,27 @@ public class InterviewQa extends BaseEntity implements UserOwned
     private static final long serialVersionUID = 1L;
 
     /** 主键ID */
-    @Excel(name = "主键ID")
     private Long id;
 
     /** 所属面试场次ID */
-    @Excel(name = "所属面试场次ID")
     private Long sessionId;
 
     /** 关联面试题目ID */
-    @Excel(name = "关联面试题目ID")
     private Long questionId;
 
     /** 所属学生用户ID */
-    @Excel(name = "所属学生用户ID")
     private Long userId;
 
     /** 题干内容(冗余,便于查询) */
-    @Excel(name = "题干内容(冗余,便于查询)")
+    @Excel(name = "题干内容")
     private String questionContent;
 
     /** 作答内容(文字) */
-    @Excel(name = "作答内容(文字)")
+    @Excel(name = "作答内容")
     private String answerContent;
 
     /** 作答方式(1文字 2语音 3视频) */
-    @Excel(name = "作答方式(1文字 2语音 3视频)")
+    @Excel(name = "作答方式", readConverterExp = "1=文字,2=语音,3=视频")
     private String answerType;
 
     /** 语音文件地址 */
@@ -53,7 +49,7 @@ public class InterviewQa extends BaseEntity implements UserOwned
     private String videoUrl;
 
     /** 是否追问(0否 1是) */
-    @Excel(name = "是否追问(0否 1是)")
+    @Excel(name = "是否追问", readConverterExp = "0=否,1=是")
     private String isFollowUp;
 
     /** 上级问答ID(追问时使用) */
@@ -61,7 +57,7 @@ public class InterviewQa extends BaseEntity implements UserOwned
 
     /** 作答时间 */
     @JsonFormat(pattern = "yyyy-MM-dd")
-    @Excel(name = "作答时间", width = 30, dateFormat = "yyyy-MM-dd")
+    @Excel(name = "作答时间", width = 30, dateFormat = "yyyy-MM-dd HH:mm:ss")
     private Date answerTime;
 
     /** 作答耗时(秒) */
@@ -76,7 +72,6 @@ public class InterviewQa extends BaseEntity implements UserOwned
     private String aiComment;
 
     /** 状态(0正常 1停用) */
-    @Excel(name = "状态(0正常 1停用)")
     private String status;
 
     /** 删除标志(0存在 2删除) */

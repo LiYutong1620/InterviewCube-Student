@@ -24,6 +24,9 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
         <result property="generateTime"    column="generate_time"    />
         <result property="status"    column="status"    />
         <result property="delFlag"    column="del_flag"    />
+        <result property="sessionNo"    column="session_no"    />
+        <result property="jobName"    column="job_name"    />
+        <result property="startTime"    column="start_time"    />
         <result property="createBy"    column="create_by"    />
         <result property="createTime"    column="create_time"    />
         <result property="updateBy"    column="update_by"    />
@@ -31,31 +34,37 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
         <result property="remark"    column="remark"    />
     </resultMap>
 
+    <!-- 关联 interview_session 带出场次编号 / 岗位名 / 开始时间，供列表页「关联场次」列与岗位名筛选使用 -->
     <sql id="selectInterviewReportVo">
-        select id, report_no, session_id, user_id, total_score, score_completeness, score_logic, score_fluency, score_depth, score_confidence, radar_data, summary, weak_points, suggest, pdf_url, generate_status, generate_time, status, del_flag, create_by, create_time, update_by, update_time, remark from interview_report
+        select ir.id, ir.report_no, ir.session_id, ir.user_id, ir.total_score, ir.score_completeness, ir.score_logic, ir.score_fluency, ir.score_depth, ir.score_confidence, ir.radar_data, ir.summary, ir.weak_points, ir.suggest, ir.pdf_url, ir.generate_status, ir.generate_time, ir.status, ir.del_flag, ir.create_by, ir.create_time, ir.update_by, ir.update_time, ir.remark,
+               s.session_no as session_no, s.job_name as job_name, s.start_time as start_time
+        from interview_report ir
+        left join interview_session s on s.id = ir.session_id
     </sql>
 
     <select id="selectInterviewReportList" parameterType="InterviewReport" resultMap="InterviewReportResult">
         <include refid="selectInterviewReportVo"/>
         <where>  
-            <if test="userId != null"> and user_id = #{userId}</if>
-            <if test="reportNo != null  and reportNo != ''"> and report_no = #{reportNo}</if>
-            <if test="sessionId != null "> and session_id = #{sessionId}</if>
-            <if test="generateStatus != null  and generateStatus != ''"> and generate_status = #{generateStatus}</if>
-            <if test="status != null  and status != ''"> and status = #{status}</if>
+            <if test="userId != null"> and ir.user_id = #{userId}</if>
+            <if test="reportNo != null  and reportNo != ''"> and ir.report_no = #{reportNo}</if>
+            <if test="sessionId != null "> and ir.session_id = #{sessionId}</if>
+            <if test="generateStatus != null  and generateStatus != ''"> and ir.generate_status = #{generateStatus}</if>
+            <if test="status != null  and status != ''"> and ir.status = #{status}</if>
+            <if test="jobName != null  and jobName != ''"> and s.job_name like concat('%', #{jobName}, '%')</if>
         </where>
+        order by ir.id desc
     </select>
     
     <select id="selectInterviewReportById" parameterType="Long" resultMap="InterviewReportResult">
         <include refid="selectInterviewReportVo"/>
-        where id = #{id}
+        where ir.id = #{id}
     </select>
 
     <insert id="insertInterviewReport" parameterType="InterviewReport" useGeneratedKeys="true" keyProperty="id">
         insert into interview_report
         <trim prefix="(" suffix=")" suffixOverrides=",">
             <if test="reportNo != null and reportNo != ''">report_no,</if>
-            <if test="sessionId != null">session_id,</if>
+            session_id,
             user_id,
             <if test="totalScore != null">total_score,</if>
             <if test="scoreCompleteness != null">score_completeness,</if>
@@ -80,7 +89,7 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
          </trim>
         <trim prefix="values (" suffix=")" suffixOverrides=",">
             <if test="reportNo != null and reportNo != ''">#{reportNo},</if>
-            <if test="sessionId != null">#{sessionId},</if>
+            #{sessionId},
             #{userId},
             <if test="totalScore != null">#{totalScore},</if>
             <if test="scoreCompleteness != null">#{scoreCompleteness},</if>
@@ -142,6 +151,14 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
         delete from interview_report where id in 
         <foreach item="id" collection="array" open="(" separator="," close=")">
             #{id}
+        </foreach>
+    </delete>
+
+    <!-- 删场次时按 session_id 级联清理 -->
+    <delete id="deleteInterviewReportBySessionIds" parameterType="String">
+        delete from interview_report where session_id in
+        <foreach item="sessionId" collection="array" open="(" separator="," close=")">
+            #{sessionId}
         </foreach>
     </delete>
 </mapper>

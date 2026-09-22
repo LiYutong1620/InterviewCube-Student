@@ -58,4 +58,12 @@ public interface InterviewQuestionMapper
      * @return 结果
      */
     public int deleteInterviewQuestionByIds(Long[] ids);
+
+    /**
+     * 按所属面试场次批量删除面试题目（删除场次时级联清理）
+     * 
+     * @param sessionIds 面试场次主键集合
+     * @return 结果
+     */
+    public int deleteInterviewQuestionBySessionIds(Long[] sessionIds);
 }

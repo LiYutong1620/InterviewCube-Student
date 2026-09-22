@@ -42,3 +42,13 @@ export function delReport(id) {
     method: 'delete'
   })
 }
+
+// 手工填分：只传 sessionId + 五个维度 + 总结 / 薄弱点 / 改进建议，总分由后端按五维平均算
+// 阶段一的演示入口，阶段三由 AI 自动评分替换
+export function fillReport(data) {
+  return request({
+    url: '/interview/report/fill',
+    method: 'post',
+    data: data
+  })
+}
