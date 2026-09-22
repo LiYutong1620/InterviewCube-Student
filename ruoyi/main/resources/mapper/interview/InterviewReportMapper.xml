@@ -1,0 +1,164 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.ruoyi.interview.mapper.InterviewReportMapper">
+    
+    <resultMap type="InterviewReport" id="InterviewReportResult">
+        <result property="id"    column="id"    />
+        <result property="reportNo"    column="report_no"    />
+        <result property="sessionId"    column="session_id"    />
+        <result property="userId"    column="user_id"    />
+        <result property="totalScore"    column="total_score"    />
+        <result property="scoreCompleteness"    column="score_completeness"    />
+        <result property="scoreLogic"    column="score_logic"    />
+        <result property="scoreFluency"    column="score_fluency"    />
+        <result property="scoreDepth"    column="score_depth"    />
+        <result property="scoreConfidence"    column="score_confidence"    />
+        <result property="radarData"    column="radar_data"    />
+        <result property="summary"    column="summary"    />
+        <result property="weakPoints"    column="weak_points"    />
+        <result property="suggest"    column="suggest"    />
+        <result property="pdfUrl"    column="pdf_url"    />
+        <result property="generateStatus"    column="generate_status"    />
+        <result property="generateTime"    column="generate_time"    />
+        <result property="status"    column="status"    />
+        <result property="delFlag"    column="del_flag"    />
+        <result property="sessionNo"    column="session_no"    />
+        <result property="jobName"    column="job_name"    />
+        <result property="startTime"    column="start_time"    />
+        <result property="createBy"    column="create_by"    />
+        <result property="createTime"    column="create_time"    />
+        <result property="updateBy"    column="update_by"    />
+        <result property="updateTime"    column="update_time"    />
+        <result property="remark"    column="remark"    />
+    </resultMap>
+
+    <!-- 关联 interview_session 带出场次编号 / 岗位名 / 开始时间，供列表页「关联场次」列与岗位名筛选使用 -->
+    <sql id="selectInterviewReportVo">
+        select ir.id, ir.report_no, ir.session_id, ir.user_id, ir.total_score, ir.score_completeness, ir.score_logic, ir.score_fluency, ir.score_depth, ir.score_confidence, ir.radar_data, ir.summary, ir.weak_points, ir.suggest, ir.pdf_url, ir.generate_status, ir.generate_time, ir.status, ir.del_flag, ir.create_by, ir.create_time, ir.update_by, ir.update_time, ir.remark,
+               s.session_no as session_no, s.job_name as job_name, s.start_time as start_time
+        from interview_report ir
+        left join interview_session s on s.id = ir.session_id
+    </sql>
+
+    <select id="selectInterviewReportList" parameterType="InterviewReport" resultMap="InterviewReportResult">
+        <include refid="selectInterviewReportVo"/>
+        <where>  
+            <if test="userId != null"> and ir.user_id = #{userId}</if>
+            <if test="reportNo != null  and reportNo != ''"> and ir.report_no = #{reportNo}</if>
+            <if test="sessionId != null "> and ir.session_id = #{sessionId}</if>
+            <if test="generateStatus != null  and generateStatus != ''"> and ir.generate_status = #{generateStatus}</if>
+            <if test="status != null  and status != ''"> and ir.status = #{status}</if>
+            <if test="jobName != null  and jobName != ''"> and s.job_name like concat('%', #{jobName}, '%')</if>
+        </where>
+        order by ir.id desc
+    </select>
+    
+    <select id="selectInterviewReportById" parameterType="Long" resultMap="InterviewReportResult">
+        <include refid="selectInterviewReportVo"/>
+        where ir.id = #{id}
+    </select>
+
+    <insert id="insertInterviewReport" parameterType="InterviewReport" useGeneratedKeys="true" keyProperty="id">
+        insert into interview_report
+        <trim prefix="(" suffix=")" suffixOverrides=",">
+            <if test="reportNo != null and reportNo != ''">report_no,</if>
+            session_id,
+            user_id,
+            <if test="totalScore != null">total_score,</if>
+            <if test="scoreCompleteness != null">score_completeness,</if>
+            <if test="scoreLogic != null">score_logic,</if>
+            <if test="scoreFluency != null">score_fluency,</if>
+            <if test="scoreDepth != null">score_depth,</if>
+            <if test="scoreConfidence != null">score_confidence,</if>
+            <if test="radarData != null">radar_data,</if>
+            <if test="summary != null">summary,</if>
+            <if test="weakPoints != null">weak_points,</if>
+            <if test="suggest != null">suggest,</if>
+            <if test="pdfUrl != null">pdf_url,</if>
+            <if test="generateStatus != null">generate_status,</if>
+            <if test="generateTime != null">generate_time,</if>
+            <if test="status != null">status,</if>
+            <if test="delFlag != null">del_flag,</if>
+            <if test="createBy != null">create_by,</if>
+            <if test="createTime != null">create_time,</if>
+            <if test="updateBy != null">update_by,</if>
+            <if test="updateTime != null">update_time,</if>
+            <if test="remark != null">remark,</if>
+         </trim>
+        <trim prefix="values (" suffix=")" suffixOverrides=",">
+            <if test="reportNo != null and reportNo != ''">#{reportNo},</if>
+            #{sessionId},
+            #{userId},
+            <if test="totalScore != null">#{totalScore},</if>
+            <if test="scoreCompleteness != null">#{scoreCompleteness},</if>
+            <if test="scoreLogic != null">#{scoreLogic},</if>
+            <if test="scoreFluency != null">#{scoreFluency},</if>
+            <if test="scoreDepth != null">#{scoreDepth},</if>
+            <if test="scoreConfidence != null">#{scoreConfidence},</if>
+            <if test="radarData != null">#{radarData},</if>
+            <if test="summary != null">#{summary},</if>
+            <if test="weakPoints != null">#{weakPoints},</if>
+            <if test="suggest != null">#{suggest},</if>
+            <if test="pdfUrl != null">#{pdfUrl},</if>
+            <if test="generateStatus != null">#{generateStatus},</if>
+            <if test="generateTime != null">#{generateTime},</if>
+            <if test="status != null">#{status},</if>
+            <if test="delFlag != null">#{delFlag},</if>
+            <if test="createBy != null">#{createBy},</if>
+            <if test="createTime != null">#{createTime},</if>
+            <if test="updateBy != null">#{updateBy},</if>
+            <if test="updateTime != null">#{updateTime},</if>
+            <if test="remark != null">#{remark},</if>
+         </trim>
+    </insert>
+
+    <update id="updateInterviewReport" parameterType="InterviewReport">
+        update interview_report
+        <trim prefix="SET" suffixOverrides=",">
+            <if test="reportNo != null and reportNo != ''">report_no = #{reportNo},</if>
+            <if test="sessionId != null">session_id = #{sessionId},</if>
+            <if test="totalScore != null">total_score = #{totalScore},</if>
+            <if test="scoreCompleteness != null">score_completeness = #{scoreCompleteness},</if>
+            <if test="scoreLogic != null">score_logic = #{scoreLogic},</if>
+            <if test="scoreFluency != null">score_fluency = #{scoreFluency},</if>
+            <if test="scoreDepth != null">score_depth = #{scoreDepth},</if>
+            <if test="scoreConfidence != null">score_confidence = #{scoreConfidence},</if>
+            <if test="radarData != null">radar_data = #{radarData},</if>
+            <if test="summary != null">summary = #{summary},</if>
+            <if test="weakPoints != null">weak_points = #{weakPoints},</if>
+            <if test="suggest != null">suggest = #{suggest},</if>
+            <if test="pdfUrl != null">pdf_url = #{pdfUrl},</if>
+            <if test="generateStatus != null">generate_status = #{generateStatus},</if>
+            <if test="generateTime != null">generate_time = #{generateTime},</if>
+            <if test="status != null">status = #{status},</if>
+            <if test="delFlag != null">del_flag = #{delFlag},</if>
+            <if test="createBy != null">create_by = #{createBy},</if>
+            <if test="createTime != null">create_time = #{createTime},</if>
+            <if test="updateBy != null">update_by = #{updateBy},</if>
+            <if test="updateTime != null">update_time = #{updateTime},</if>
+            <if test="remark != null">remark = #{remark},</if>
+        </trim>
+        where id = #{id}
+    </update>
+
+    <delete id="deleteInterviewReportById" parameterType="Long">
+        delete from interview_report where id = #{id}
+    </delete>
+
+    <delete id="deleteInterviewReportByIds" parameterType="String">
+        delete from interview_report where id in 
+        <foreach item="id" collection="array" open="(" separator="," close=")">
+            #{id}
+        </foreach>
+    </delete>
+
+    <!-- 删场次时按 session_id 级联清理 -->
+    <delete id="deleteInterviewReportBySessionIds" parameterType="String">
+        delete from interview_report where session_id in
+        <foreach item="sessionId" collection="array" open="(" separator="," close=")">
+            #{sessionId}
+        </foreach>
+    </delete>
+</mapper>

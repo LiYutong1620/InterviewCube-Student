@@ -1,0 +1,23 @@
+1. 菜单权限	
+菜单	权限标识
+学生档案	student:profile:list
+学生简历	student:resume:list
+学生岗位画像	student:jobprofile:list
+模拟面试	interview:session:list
+面试题目	interview:question:list
+面试问答	interview:qa:list
+复盘报告	interview:report:list
+题库题目	question:bank:list
+	
+2. 按钮权限	
+实体	权限标识
+学生档案	student:profile:query、student:profile:add、student:profile:edit、student:profile:remove、student:profile:export
+学生简历	student:resume:query、student:resume:add、student:resume:edit、student:resume:remove、student:resume:export
+学生岗位画像	student:jobprofile:query、student:jobprofile:add、student:jobprofile:edit、student:jobprofile:remove
+模拟面试	interview:session:query、interview:session:add、interview:session:edit、interview:session:remove、interview:session:export
+面试题目	interview:question:query、interview:question:add、interview:question:edit、interview:question:remove
+面试问答	interview:qa:query、interview:qa:add、interview:qa:edit、interview:qa:remove
+复盘报告	interview:report:query、interview:report:add、interview:report:edit、interview:report:remove、interview:report:export
+题库题目	question:bank:query、question:bank:add、question:bank:edit、question:bank:remove、question:bank:export
+复用若依用户	system:user:query、system:user:edit、system:user:remove
+复用若依配置	system:config:query

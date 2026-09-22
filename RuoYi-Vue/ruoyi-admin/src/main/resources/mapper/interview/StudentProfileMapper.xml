@@ -1,0 +1,145 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.ruoyi.interview.mapper.StudentProfileMapper">
+    
+    <resultMap type="StudentProfile" id="StudentProfileResult">
+        <result property="id"    column="id"    />
+        <result property="userId"    column="user_id"    />
+        <result property="nickname"    column="nickname"    />
+        <result property="avatar"    column="avatar"    />
+        <result property="realName"    column="real_name"    />
+        <result property="gender"    column="gender"    />
+        <result property="phone"    column="phone"    />
+        <result property="email"    column="email"    />
+        <result property="school"    column="school"    />
+        <result property="major"    column="major"    />
+        <result property="education"    column="education"    />
+        <result property="graduationYear"    column="graduation_year"    />
+        <result property="guideStatus"    column="guide_status"    />
+        <result property="currentLevel"    column="current_level"    />
+        <result property="currentPoints"    column="current_points"    />
+        <result property="status"    column="status"    />
+        <result property="delFlag"    column="del_flag"    />
+        <result property="createBy"    column="create_by"    />
+        <result property="createTime"    column="create_time"    />
+        <result property="updateBy"    column="update_by"    />
+        <result property="updateTime"    column="update_time"    />
+        <result property="remark"    column="remark"    />
+    </resultMap>
+
+    <sql id="selectStudentProfileVo">
+        select id, user_id, nickname, avatar, real_name, gender, phone, email, school, major, education, graduation_year, guide_status, current_level, current_points, status, del_flag, create_by, create_time, update_by, update_time, remark from student_profile
+    </sql>
+
+    <select id="selectStudentProfileList" parameterType="StudentProfile" resultMap="StudentProfileResult">
+        <include refid="selectStudentProfileVo"/>
+        <where>  
+            <if test="userId != null"> and user_id = #{userId}</if>
+            <if test="nickname != null  and nickname != ''"> and nickname like concat('%', #{nickname}, '%')</if>
+            <if test="realName != null  and realName != ''"> and real_name like concat('%', #{realName}, '%')</if>
+            <if test="gender != null  and gender != ''"> and gender = #{gender}</if>
+            <if test="phone != null  and phone != ''"> and phone like concat('%', #{phone}, '%')</if>
+            <if test="email != null  and email != ''"> and email like concat('%', #{email}, '%')</if>
+            <if test="school != null  and school != ''"> and school like concat('%', #{school}, '%')</if>
+            <if test="major != null  and major != ''"> and major like concat('%', #{major}, '%')</if>
+            <if test="education != null  and education != ''"> and education = #{education}</if>
+            <if test="guideStatus != null  and guideStatus != ''"> and guide_status = #{guideStatus}</if>
+            <if test="status != null  and status != ''"> and status = #{status}</if>
+        </where>
+    </select>
+    
+    <select id="selectStudentProfileById" parameterType="Long" resultMap="StudentProfileResult">
+        <include refid="selectStudentProfileVo"/>
+        where id = #{id}
+    </select>
+
+    <insert id="insertStudentProfile" parameterType="StudentProfile" useGeneratedKeys="true" keyProperty="id">
+        insert into student_profile
+        <trim prefix="(" suffix=")" suffixOverrides=",">
+            user_id,
+            <if test="nickname != null and nickname != ''">nickname,</if>
+            <if test="avatar != null">avatar,</if>
+            <if test="realName != null">real_name,</if>
+            <if test="gender != null">gender,</if>
+            <if test="phone != null">phone,</if>
+            <if test="email != null">email,</if>
+            <if test="school != null">school,</if>
+            <if test="major != null">major,</if>
+            <if test="education != null">education,</if>
+            <if test="graduationYear != null">graduation_year,</if>
+            <if test="guideStatus != null">guide_status,</if>
+            <if test="currentLevel != null">current_level,</if>
+            <if test="currentPoints != null">current_points,</if>
+            <if test="status != null">status,</if>
+            <if test="delFlag != null">del_flag,</if>
+            <if test="createBy != null">create_by,</if>
+            <if test="createTime != null">create_time,</if>
+            <if test="updateBy != null">update_by,</if>
+            <if test="updateTime != null">update_time,</if>
+            <if test="remark != null">remark,</if>
+         </trim>
+        <trim prefix="values (" suffix=")" suffixOverrides=",">
+            #{userId},
+            <if test="nickname != null and nickname != ''">#{nickname},</if>
+            <if test="avatar != null">#{avatar},</if>
+            <if test="realName != null">#{realName},</if>
+            <if test="gender != null">#{gender},</if>
+            <if test="phone != null">#{phone},</if>
+            <if test="email != null">#{email},</if>
+            <if test="school != null">#{school},</if>
+            <if test="major != null">#{major},</if>
+            <if test="education != null">#{education},</if>
+            <if test="graduationYear != null">#{graduationYear},</if>
+            <if test="guideStatus != null">#{guideStatus},</if>
+            <if test="currentLevel != null">#{currentLevel},</if>
+            <if test="currentPoints != null">#{currentPoints},</if>
+            <if test="status != null">#{status},</if>
+            <if test="delFlag != null">#{delFlag},</if>
+            <if test="createBy != null">#{createBy},</if>
+            <if test="createTime != null">#{createTime},</if>
+            <if test="updateBy != null">#{updateBy},</if>
+            <if test="updateTime != null">#{updateTime},</if>
+            <if test="remark != null">#{remark},</if>
+         </trim>
+    </insert>
+
+    <update id="updateStudentProfile" parameterType="StudentProfile">
+        update student_profile
+        <trim prefix="SET" suffixOverrides=",">
+            <if test="nickname != null and nickname != ''">nickname = #{nickname},</if>
+            <if test="avatar != null">avatar = #{avatar},</if>
+            <if test="realName != null">real_name = #{realName},</if>
+            <if test="gender != null">gender = #{gender},</if>
+            <if test="phone != null">phone = #{phone},</if>
+            <if test="email != null">email = #{email},</if>
+            <if test="school != null">school = #{school},</if>
+            <if test="major != null">major = #{major},</if>
+            <if test="education != null">education = #{education},</if>
+            <if test="graduationYear != null">graduation_year = #{graduationYear},</if>
+            <if test="guideStatus != null">guide_status = #{guideStatus},</if>
+            <if test="currentLevel != null">current_level = #{currentLevel},</if>
+            <if test="currentPoints != null">current_points = #{currentPoints},</if>
+            <if test="status != null">status = #{status},</if>
+            <if test="delFlag != null">del_flag = #{delFlag},</if>
+            <if test="createBy != null">create_by = #{createBy},</if>
+            <if test="createTime != null">create_time = #{createTime},</if>
+            <if test="updateBy != null">update_by = #{updateBy},</if>
+            <if test="updateTime != null">update_time = #{updateTime},</if>
+            <if test="remark != null">remark = #{remark},</if>
+        </trim>
+        where id = #{id}
+    </update>
+
+    <delete id="deleteStudentProfileById" parameterType="Long">
+        delete from student_profile where id = #{id}
+    </delete>
+
+    <delete id="deleteStudentProfileByIds" parameterType="String">
+        delete from student_profile where id in 
+        <foreach item="id" collection="array" open="(" separator="," close=")">
+            #{id}
+        </foreach>
+    </delete>
+</mapper>

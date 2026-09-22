@@ -1,0 +1,120 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.ruoyi.interview.mapper.StudentJobProfileMapper">
+    
+    <resultMap type="StudentJobProfile" id="StudentJobProfileResult">
+        <result property="id"    column="id"    />
+        <result property="userId"    column="user_id"    />
+        <result property="industry"    column="industry"    />
+        <result property="jobName"    column="job_name"    />
+        <result property="difficulty"    column="difficulty"    />
+        <result property="companyType"    column="company_type"    />
+        <result property="isDefault"    column="is_default"    />
+        <result property="status"    column="status"    />
+        <result property="delFlag"    column="del_flag"    />
+        <result property="createBy"    column="create_by"    />
+        <result property="createTime"    column="create_time"    />
+        <result property="updateBy"    column="update_by"    />
+        <result property="updateTime"    column="update_time"    />
+        <result property="remark"    column="remark"    />
+    </resultMap>
+
+    <sql id="selectStudentJobProfileVo">
+        select id, user_id, industry, job_name, difficulty, company_type, is_default, status, del_flag, create_by, create_time, update_by, update_time, remark from student_job_profile
+    </sql>
+
+    <select id="selectStudentJobProfileList" parameterType="StudentJobProfile" resultMap="StudentJobProfileResult">
+        <include refid="selectStudentJobProfileVo"/>
+        <where>  
+            <if test="userId != null"> and user_id = #{userId}</if>
+            <if test="industry != null  and industry != ''"> and industry = #{industry}</if>
+            <if test="jobName != null  and jobName != ''"> and job_name like concat('%', #{jobName}, '%')</if>
+            <if test="difficulty != null  and difficulty != ''"> and difficulty = #{difficulty}</if>
+            <if test="companyType != null  and companyType != ''"> and company_type = #{companyType}</if>
+            <if test="isDefault != null  and isDefault != ''"> and is_default = #{isDefault}</if>
+            <if test="status != null  and status != ''"> and status = #{status}</if>
+        </where>
+    </select>
+    
+    <select id="selectStudentJobProfileById" parameterType="Long" resultMap="StudentJobProfileResult">
+        <include refid="selectStudentJobProfileVo"/>
+        where id = #{id}
+    </select>
+
+    <insert id="insertStudentJobProfile" parameterType="StudentJobProfile" useGeneratedKeys="true" keyProperty="id">
+        insert into student_job_profile
+        <trim prefix="(" suffix=")" suffixOverrides=",">
+            user_id,
+            <if test="industry != null and industry != ''">industry,</if>
+            <if test="jobName != null and jobName != ''">job_name,</if>
+            <if test="difficulty != null and difficulty != ''">difficulty,</if>
+            <if test="companyType != null">company_type,</if>
+            <if test="isDefault != null">is_default,</if>
+            <if test="status != null">status,</if>
+            <if test="delFlag != null">del_flag,</if>
+            <if test="createBy != null">create_by,</if>
+            <if test="createTime != null">create_time,</if>
+            <if test="updateBy != null">update_by,</if>
+            <if test="updateTime != null">update_time,</if>
+            <if test="remark != null">remark,</if>
+         </trim>
+        <trim prefix="values (" suffix=")" suffixOverrides=",">
+            #{userId},
+            <if test="industry != null and industry != ''">#{industry},</if>
+            <if test="jobName != null and jobName != ''">#{jobName},</if>
+            <if test="difficulty != null and difficulty != ''">#{difficulty},</if>
+            <if test="companyType != null">#{companyType},</if>
+            <if test="isDefault != null">#{isDefault},</if>
+            <if test="status != null">#{status},</if>
+            <if test="delFlag != null">#{delFlag},</if>
+            <if test="createBy != null">#{createBy},</if>
+            <if test="createTime != null">#{createTime},</if>
+            <if test="updateBy != null">#{updateBy},</if>
+            <if test="updateTime != null">#{updateTime},</if>
+            <if test="remark != null">#{remark},</if>
+         </trim>
+    </insert>
+
+    <update id="updateStudentJobProfile" parameterType="StudentJobProfile">
+        update student_job_profile
+        <trim prefix="SET" suffixOverrides=",">
+            <if test="industry != null and industry != ''">industry = #{industry},</if>
+            <if test="jobName != null and jobName != ''">job_name = #{jobName},</if>
+            <if test="difficulty != null and difficulty != ''">difficulty = #{difficulty},</if>
+            <if test="companyType != null">company_type = #{companyType},</if>
+            <if test="isDefault != null">is_default = #{isDefault},</if>
+            <if test="status != null">status = #{status},</if>
+            <if test="delFlag != null">del_flag = #{delFlag},</if>
+            <if test="createBy != null">create_by = #{createBy},</if>
+            <if test="createTime != null">create_time = #{createTime},</if>
+            <if test="updateBy != null">update_by = #{updateBy},</if>
+            <if test="updateTime != null">update_time = #{updateTime},</if>
+            <if test="remark != null">remark = #{remark},</if>
+        </trim>
+        where id = #{id}
+    </update>
+
+    <delete id="deleteStudentJobProfileById" parameterType="Long">
+        delete from student_job_profile where id = #{id}
+    </delete>
+
+    <delete id="deleteStudentJobProfileByIds" parameterType="String">
+        delete from student_job_profile where id in 
+        <foreach item="id" collection="array" open="(" separator="," close=")">
+            #{id}
+        </foreach>
+    </delete>
+
+    <!-- 唯一默认：把该学生名下其他画像的 is_default 置为 0（新增时 keepId 传 null；只处理未删除行 del_flag='0'） -->
+    <update id="clearDefaultByUserId">
+        update student_job_profile
+        set is_default = '0'
+        where user_id = #{userId}
+          and is_default = '1'
+          and del_flag = '0'
+        <if test="keepId != null"> and id != #{keepId}</if>
+    </update>
+
+</mapper>

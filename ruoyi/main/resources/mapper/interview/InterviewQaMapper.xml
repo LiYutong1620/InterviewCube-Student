@@ -1,0 +1,150 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.ruoyi.interview.mapper.InterviewQaMapper">
+    
+    <resultMap type="InterviewQa" id="InterviewQaResult">
+        <result property="id"    column="id"    />
+        <result property="sessionId"    column="session_id"    />
+        <result property="questionId"    column="question_id"    />
+        <result property="userId"    column="user_id"    />
+        <result property="questionContent"    column="question_content"    />
+        <result property="answerContent"    column="answer_content"    />
+        <result property="answerType"    column="answer_type"    />
+        <result property="audioUrl"    column="audio_url"    />
+        <result property="videoUrl"    column="video_url"    />
+        <result property="isFollowUp"    column="is_follow_up"    />
+        <result property="parentId"    column="parent_id"    />
+        <result property="answerTime"    column="answer_time"    />
+        <result property="duration"    column="duration"    />
+        <result property="score"    column="score"    />
+        <result property="aiComment"    column="ai_comment"    />
+        <result property="status"    column="status"    />
+        <result property="delFlag"    column="del_flag"    />
+        <result property="createBy"    column="create_by"    />
+        <result property="createTime"    column="create_time"    />
+        <result property="updateBy"    column="update_by"    />
+        <result property="updateTime"    column="update_time"    />
+        <result property="remark"    column="remark"    />
+    </resultMap>
+
+    <sql id="selectInterviewQaVo">
+        select id, session_id, question_id, user_id, question_content, answer_content, answer_type, audio_url, video_url, is_follow_up, parent_id, answer_time, duration, score, ai_comment, status, del_flag, create_by, create_time, update_by, update_time, remark from interview_qa
+    </sql>
+
+    <select id="selectInterviewQaList" parameterType="InterviewQa" resultMap="InterviewQaResult">
+        <include refid="selectInterviewQaVo"/>
+        <where>  
+            <if test="userId != null"> and user_id = #{userId}</if>
+            <if test="sessionId != null "> and session_id = #{sessionId}</if>
+            <if test="questionId != null "> and question_id = #{questionId}</if>
+            <if test="questionContent != null  and questionContent != ''"> and question_content like concat('%', #{questionContent}, '%')</if>
+            <if test="answerType != null  and answerType != ''"> and answer_type = #{answerType}</if>
+            <if test="isFollowUp != null  and isFollowUp != ''"> and is_follow_up = #{isFollowUp}</if>
+            <if test="params.beginAnswerTime != null and params.beginAnswerTime != '' and params.endAnswerTime != null and params.endAnswerTime != ''"> and answer_time between #{params.beginAnswerTime} and #{params.endAnswerTime}</if>
+            <if test="status != null  and status != ''"> and status = #{status}</if>
+        </where>
+    </select>
+    
+    <select id="selectInterviewQaById" parameterType="Long" resultMap="InterviewQaResult">
+        <include refid="selectInterviewQaVo"/>
+        where id = #{id}
+    </select>
+
+    <insert id="insertInterviewQa" parameterType="InterviewQa" useGeneratedKeys="true" keyProperty="id">
+        insert into interview_qa
+        <trim prefix="(" suffix=")" suffixOverrides=",">
+            session_id,
+            question_id,
+            user_id,
+            <if test="questionContent != null">question_content,</if>
+            <if test="answerContent != null">answer_content,</if>
+            <if test="answerType != null">answer_type,</if>
+            <if test="audioUrl != null">audio_url,</if>
+            <if test="videoUrl != null">video_url,</if>
+            <if test="isFollowUp != null">is_follow_up,</if>
+            <if test="parentId != null">parent_id,</if>
+            <if test="answerTime != null">answer_time,</if>
+            <if test="duration != null">duration,</if>
+            <if test="score != null">score,</if>
+            <if test="aiComment != null">ai_comment,</if>
+            <if test="status != null">status,</if>
+            <if test="delFlag != null">del_flag,</if>
+            <if test="createBy != null">create_by,</if>
+            <if test="createTime != null">create_time,</if>
+            <if test="updateBy != null">update_by,</if>
+            <if test="updateTime != null">update_time,</if>
+            <if test="remark != null">remark,</if>
+         </trim>
+        <trim prefix="values (" suffix=")" suffixOverrides=",">
+            #{sessionId},
+            #{questionId},
+            #{userId},
+            <if test="questionContent != null">#{questionContent},</if>
+            <if test="answerContent != null">#{answerContent},</if>
+            <if test="answerType != null">#{answerType},</if>
+            <if test="audioUrl != null">#{audioUrl},</if>
+            <if test="videoUrl != null">#{videoUrl},</if>
+            <if test="isFollowUp != null">#{isFollowUp},</if>
+            <if test="parentId != null">#{parentId},</if>
+            <if test="answerTime != null">#{answerTime},</if>
+            <if test="duration != null">#{duration},</if>
+            <if test="score != null">#{score},</if>
+            <if test="aiComment != null">#{aiComment},</if>
+            <if test="status != null">#{status},</if>
+            <if test="delFlag != null">#{delFlag},</if>
+            <if test="createBy != null">#{createBy},</if>
+            <if test="createTime != null">#{createTime},</if>
+            <if test="updateBy != null">#{updateBy},</if>
+            <if test="updateTime != null">#{updateTime},</if>
+            <if test="remark != null">#{remark},</if>
+         </trim>
+    </insert>
+
+    <update id="updateInterviewQa" parameterType="InterviewQa">
+        update interview_qa
+        <trim prefix="SET" suffixOverrides=",">
+            <if test="sessionId != null">session_id = #{sessionId},</if>
+            <if test="questionId != null">question_id = #{questionId},</if>
+            <if test="questionContent != null">question_content = #{questionContent},</if>
+            <if test="answerContent != null">answer_content = #{answerContent},</if>
+            <if test="answerType != null">answer_type = #{answerType},</if>
+            <if test="audioUrl != null">audio_url = #{audioUrl},</if>
+            <if test="videoUrl != null">video_url = #{videoUrl},</if>
+            <if test="isFollowUp != null">is_follow_up = #{isFollowUp},</if>
+            <if test="parentId != null">parent_id = #{parentId},</if>
+            <if test="answerTime != null">answer_time = #{answerTime},</if>
+            <if test="duration != null">duration = #{duration},</if>
+            <if test="score != null">score = #{score},</if>
+            <if test="aiComment != null">ai_comment = #{aiComment},</if>
+            <if test="status != null">status = #{status},</if>
+            <if test="delFlag != null">del_flag = #{delFlag},</if>
+            <if test="createBy != null">create_by = #{createBy},</if>
+            <if test="createTime != null">create_time = #{createTime},</if>
+            <if test="updateBy != null">update_by = #{updateBy},</if>
+            <if test="updateTime != null">update_time = #{updateTime},</if>
+            <if test="remark != null">remark = #{remark},</if>
+        </trim>
+        where id = #{id}
+    </update>
+
+    <delete id="deleteInterviewQaById" parameterType="Long">
+        delete from interview_qa where id = #{id}
+    </delete>
+
+    <delete id="deleteInterviewQaByIds" parameterType="String">
+        delete from interview_qa where id in 
+        <foreach item="id" collection="array" open="(" separator="," close=")">
+            #{id}
+        </foreach>
+    </delete>
+
+    <!-- 删场次时按 session_id 级联清理 -->
+    <delete id="deleteInterviewQaBySessionIds" parameterType="String">
+        delete from interview_qa where session_id in
+        <foreach item="sessionId" collection="array" open="(" separator="," close=")">
+            #{sessionId}
+        </foreach>
+    </delete>
+</mapper>

@@ -1,0 +1,156 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.ruoyi.interview.mapper.QuestionBankMapper">
+    
+    <resultMap type="QuestionBank" id="QuestionBankResult">
+        <result property="id"    column="id"    />
+        <result property="questionContent"    column="question_content"    />
+        <result property="questionType"    column="question_type"    />
+        <result property="industry"    column="industry"    />
+        <result property="jobName"    column="job_name"    />
+        <result property="difficulty"    column="difficulty"    />
+        <result property="companyType"    column="company_type"    />
+        <result property="referenceAnswer"    column="reference_answer"    />
+        <result property="keyPoints"    column="key_points"    />
+        <result property="tags"    column="tags"    />
+        <result property="source"    column="source"    />
+        <result property="useCount"    column="use_count"    />
+        <result property="status"    column="status"    />
+        <result property="delFlag"    column="del_flag"    />
+        <result property="createBy"    column="create_by"    />
+        <result property="createTime"    column="create_time"    />
+        <result property="updateBy"    column="update_by"    />
+        <result property="updateTime"    column="update_time"    />
+        <result property="remark"    column="remark"    />
+    </resultMap>
+
+    <sql id="selectQuestionBankVo">
+        select id, question_content, question_type, industry, job_name, difficulty, company_type, reference_answer, key_points, tags, source, use_count, status, del_flag, create_by, create_time, update_by, update_time, remark from question_bank
+    </sql>
+
+    <select id="selectQuestionBankList" parameterType="QuestionBank" resultMap="QuestionBankResult">
+        <include refid="selectQuestionBankVo"/>
+        <where>  
+            <if test="questionContent != null  and questionContent != ''"> and question_content like concat('%', #{questionContent}, '%')</if>
+            <if test="questionType != null  and questionType != ''"> and question_type = #{questionType}</if>
+            <if test="industry != null  and industry != ''"> and industry = #{industry}</if>
+            <if test="jobName != null  and jobName != ''"> and job_name like concat('%', #{jobName}, '%')</if>
+            <if test="difficulty != null  and difficulty != ''"> and difficulty = #{difficulty}</if>
+            <if test="companyType != null  and companyType != ''"> and company_type = #{companyType}</if>
+            <if test="tags != null  and tags != ''"> and tags like concat('%', #{tags}, '%')</if>
+            <if test="source != null  and source != ''"> and source = #{source}</if>
+            <if test="status != null  and status != ''"> and status = #{status}</if>
+        </where>
+    </select>
+    
+    <select id="selectQuestionBankById" parameterType="Long" resultMap="QuestionBankResult">
+        <include refid="selectQuestionBankVo"/>
+        where id = #{id}
+    </select>
+
+    <insert id="insertQuestionBank" parameterType="QuestionBank" useGeneratedKeys="true" keyProperty="id">
+        insert into question_bank
+        <trim prefix="(" suffix=")" suffixOverrides=",">
+            question_content,
+            <if test="questionType != null">question_type,</if>
+            <if test="industry != null">industry,</if>
+            <if test="jobName != null">job_name,</if>
+            <if test="difficulty != null">difficulty,</if>
+            <if test="companyType != null">company_type,</if>
+            <if test="referenceAnswer != null">reference_answer,</if>
+            <if test="keyPoints != null">key_points,</if>
+            <if test="tags != null">tags,</if>
+            <if test="source != null">source,</if>
+            <if test="useCount != null">use_count,</if>
+            <if test="status != null">status,</if>
+            <if test="delFlag != null">del_flag,</if>
+            <if test="createBy != null">create_by,</if>
+            <if test="createTime != null">create_time,</if>
+            <if test="updateBy != null">update_by,</if>
+            <if test="updateTime != null">update_time,</if>
+            <if test="remark != null">remark,</if>
+         </trim>
+        <trim prefix="values (" suffix=")" suffixOverrides=",">
+            #{questionContent},
+            <if test="questionType != null">#{questionType},</if>
+            <if test="industry != null">#{industry},</if>
+            <if test="jobName != null">#{jobName},</if>
+            <if test="difficulty != null">#{difficulty},</if>
+            <if test="companyType != null">#{companyType},</if>
+            <if test="referenceAnswer != null">#{referenceAnswer},</if>
+            <if test="keyPoints != null">#{keyPoints},</if>
+            <if test="tags != null">#{tags},</if>
+            <if test="source != null">#{source},</if>
+            <if test="useCount != null">#{useCount},</if>
+            <if test="status != null">#{status},</if>
+            <if test="delFlag != null">#{delFlag},</if>
+            <if test="createBy != null">#{createBy},</if>
+            <if test="createTime != null">#{createTime},</if>
+            <if test="updateBy != null">#{updateBy},</if>
+            <if test="updateTime != null">#{updateTime},</if>
+            <if test="remark != null">#{remark},</if>
+         </trim>
+    </insert>
+
+    <update id="updateQuestionBank" parameterType="QuestionBank">
+        update question_bank
+        <trim prefix="SET" suffixOverrides=",">
+            <if test="questionContent != null and questionContent != ''">question_content = #{questionContent},</if>
+            <if test="questionType != null">question_type = #{questionType},</if>
+            <if test="industry != null">industry = #{industry},</if>
+            <if test="jobName != null">job_name = #{jobName},</if>
+            <if test="difficulty != null">difficulty = #{difficulty},</if>
+            <if test="companyType != null">company_type = #{companyType},</if>
+            <if test="referenceAnswer != null">reference_answer = #{referenceAnswer},</if>
+            <if test="keyPoints != null">key_points = #{keyPoints},</if>
+            <if test="tags != null">tags = #{tags},</if>
+            <if test="source != null">source = #{source},</if>
+            <if test="useCount != null">use_count = #{useCount},</if>
+            <if test="status != null">status = #{status},</if>
+            <if test="delFlag != null">del_flag = #{delFlag},</if>
+            <if test="createBy != null">create_by = #{createBy},</if>
+            <if test="createTime != null">create_time = #{createTime},</if>
+            <if test="updateBy != null">update_by = #{updateBy},</if>
+            <if test="updateTime != null">update_time = #{updateTime},</if>
+            <if test="remark != null">remark = #{remark},</if>
+        </trim>
+        where id = #{id}
+    </update>
+
+    <delete id="deleteQuestionBankById" parameterType="Long">
+        delete from question_bank where id = #{id}
+    </delete>
+
+    <delete id="deleteQuestionBankByIds" parameterType="String">
+        delete from question_bank where id in 
+        <foreach item="id" collection="array" open="(" separator="," close=")">
+            #{id}
+        </foreach>
+    </delete>
+
+    <!-- 随机抽题：只取正常状态的题；行业 / 难度 / 题型为空则不参与过滤 -->
+    <select id="selectRandomQuestions" resultMap="QuestionBankResult">
+        <include refid="selectQuestionBankVo"/>
+        where status = '0'
+        <if test="industry != null and industry != ''"> and industry = #{industry}</if>
+        <if test="difficulty != null and difficulty != ''"> and difficulty = #{difficulty}</if>
+        <if test="questionTypes != null and questionTypes.size() > 0">
+            and question_type in
+            <foreach item="questionType" collection="questionTypes" open="(" separator="," close=")">#{questionType}</foreach>
+        </if>
+        <if test="excludeIds != null and excludeIds.size() > 0">
+            and id not in
+            <foreach item="excludeId" collection="excludeIds" open="(" separator="," close=")">#{excludeId}</foreach>
+        </if>
+        order by rand()
+        limit #{limit}
+    </select>
+
+    <!-- 被使用次数累加 -->
+    <update id="increaseUseCount">
+        update question_bank set use_count = ifnull(use_count, 0) + 1 where id in
+        <foreach item="id" collection="ids" open="(" separator="," close=")">#{id}</foreach>
+    </update>
+</mapper>

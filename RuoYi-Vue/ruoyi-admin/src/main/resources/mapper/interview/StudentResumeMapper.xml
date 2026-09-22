@@ -1,0 +1,136 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.ruoyi.interview.mapper.StudentResumeMapper">
+    
+    <resultMap type="StudentResume" id="StudentResumeResult">
+        <result property="id"    column="id"    />
+        <result property="userId"    column="user_id"    />
+        <result property="resumeName"    column="resume_name"    />
+        <result property="fileUrl"    column="file_url"    />
+        <result property="fileType"    column="file_type"    />
+        <result property="fileSize"    column="file_size"    />
+        <result property="sourceType"    column="source_type"    />
+        <result property="isDefault"    column="is_default"    />
+        <result property="parseStatus"    column="parse_status"    />
+        <result property="parseResult"    column="parse_result"    />
+        <result property="parseTime"    column="parse_time"    />
+        <result property="status"    column="status"    />
+        <result property="delFlag"    column="del_flag"    />
+        <result property="createBy"    column="create_by"    />
+        <result property="createTime"    column="create_time"    />
+        <result property="updateBy"    column="update_by"    />
+        <result property="updateTime"    column="update_time"    />
+        <result property="remark"    column="remark"    />
+    </resultMap>
+
+    <sql id="selectStudentResumeVo">
+        select id, user_id, resume_name, file_url, file_type, file_size, source_type, is_default, parse_status, parse_result, parse_time, status, del_flag, create_by, create_time, update_by, update_time, remark from student_resume
+    </sql>
+
+    <select id="selectStudentResumeList" parameterType="StudentResume" resultMap="StudentResumeResult">
+        <include refid="selectStudentResumeVo"/>
+        <where>  
+            <if test="userId != null"> and user_id = #{userId}</if>
+            <if test="resumeName != null  and resumeName != ''"> and resume_name like concat('%', #{resumeName}, '%')</if>
+            <if test="fileType != null  and fileType != ''"> and file_type = #{fileType}</if>
+            <if test="sourceType != null  and sourceType != ''"> and source_type = #{sourceType}</if>
+            <if test="isDefault != null  and isDefault != ''"> and is_default = #{isDefault}</if>
+            <if test="parseStatus != null  and parseStatus != ''"> and parse_status = #{parseStatus}</if>
+            <if test="status != null  and status != ''"> and status = #{status}</if>
+        </where>
+    </select>
+    
+    <select id="selectStudentResumeById" parameterType="Long" resultMap="StudentResumeResult">
+        <include refid="selectStudentResumeVo"/>
+        where id = #{id}
+    </select>
+
+    <insert id="insertStudentResume" parameterType="StudentResume" useGeneratedKeys="true" keyProperty="id">
+        insert into student_resume
+        <trim prefix="(" suffix=")" suffixOverrides=",">
+            user_id,
+            <if test="resumeName != null and resumeName != ''">resume_name,</if>
+            <if test="fileUrl != null and fileUrl != ''">file_url,</if>
+            <if test="fileType != null">file_type,</if>
+            <if test="fileSize != null">file_size,</if>
+            <if test="sourceType != null">source_type,</if>
+            <if test="isDefault != null">is_default,</if>
+            <if test="parseStatus != null">parse_status,</if>
+            <if test="parseResult != null">parse_result,</if>
+            <if test="parseTime != null">parse_time,</if>
+            <if test="status != null">status,</if>
+            <if test="delFlag != null">del_flag,</if>
+            <if test="createBy != null">create_by,</if>
+            <if test="createTime != null">create_time,</if>
+            <if test="updateBy != null">update_by,</if>
+            <if test="updateTime != null">update_time,</if>
+            <if test="remark != null">remark,</if>
+         </trim>
+        <trim prefix="values (" suffix=")" suffixOverrides=",">
+            #{userId},
+            <if test="resumeName != null and resumeName != ''">#{resumeName},</if>
+            <if test="fileUrl != null and fileUrl != ''">#{fileUrl},</if>
+            <if test="fileType != null">#{fileType},</if>
+            <if test="fileSize != null">#{fileSize},</if>
+            <if test="sourceType != null">#{sourceType},</if>
+            <if test="isDefault != null">#{isDefault},</if>
+            <if test="parseStatus != null">#{parseStatus},</if>
+            <if test="parseResult != null">#{parseResult},</if>
+            <if test="parseTime != null">#{parseTime},</if>
+            <if test="status != null">#{status},</if>
+            <if test="delFlag != null">#{delFlag},</if>
+            <if test="createBy != null">#{createBy},</if>
+            <if test="createTime != null">#{createTime},</if>
+            <if test="updateBy != null">#{updateBy},</if>
+            <if test="updateTime != null">#{updateTime},</if>
+            <if test="remark != null">#{remark},</if>
+         </trim>
+    </insert>
+
+    <update id="updateStudentResume" parameterType="StudentResume">
+        update student_resume
+        <trim prefix="SET" suffixOverrides=",">
+            <if test="resumeName != null and resumeName != ''">resume_name = #{resumeName},</if>
+            <if test="fileUrl != null and fileUrl != ''">file_url = #{fileUrl},</if>
+            <if test="fileType != null">file_type = #{fileType},</if>
+            <if test="fileSize != null">file_size = #{fileSize},</if>
+            <if test="sourceType != null">source_type = #{sourceType},</if>
+            <if test="isDefault != null">is_default = #{isDefault},</if>
+            <if test="parseStatus != null">parse_status = #{parseStatus},</if>
+            <if test="parseResult != null">parse_result = #{parseResult},</if>
+            <if test="parseTime != null">parse_time = #{parseTime},</if>
+            <if test="status != null">status = #{status},</if>
+            <if test="delFlag != null">del_flag = #{delFlag},</if>
+            <if test="createBy != null">create_by = #{createBy},</if>
+            <if test="createTime != null">create_time = #{createTime},</if>
+            <if test="updateBy != null">update_by = #{updateBy},</if>
+            <if test="updateTime != null">update_time = #{updateTime},</if>
+            <if test="remark != null">remark = #{remark},</if>
+        </trim>
+        where id = #{id}
+    </update>
+
+    <delete id="deleteStudentResumeById" parameterType="Long">
+        delete from student_resume where id = #{id}
+    </delete>
+
+    <delete id="deleteStudentResumeByIds" parameterType="String">
+        delete from student_resume where id in 
+        <foreach item="id" collection="array" open="(" separator="," close=")">
+            #{id}
+        </foreach>
+    </delete>
+
+    <!-- 唯一默认：把该学生名下其他简历的 is_default 置为 0（新增时 keepId 传 null；只处理未删除行 del_flag='0'） -->
+    <update id="clearDefaultByUserId">
+        update student_resume
+        set is_default = '0'
+        where user_id = #{userId}
+          and is_default = '1'
+          and del_flag = '0'
+        <if test="keepId != null"> and id != #{keepId}</if>
+    </update>
+
+</mapper>

@@ -1,0 +1,137 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.ruoyi.interview.mapper.InterviewQuestionMapper">
+    
+    <resultMap type="InterviewQuestion" id="InterviewQuestionResult">
+        <result property="id"    column="id"    />
+        <result property="sessionId"    column="session_id"    />
+        <result property="userId"    column="user_id"    />
+        <result property="bankQuestionId"    column="bank_question_id"    />
+        <result property="questionNo"    column="question_no"    />
+        <result property="questionType"    column="question_type"    />
+        <result property="questionContent"    column="question_content"    />
+        <result property="referenceAnswer"    column="reference_answer"    />
+        <result property="keyPoints"    column="key_points"    />
+        <result property="isFollowUp"    column="is_follow_up"    />
+        <result property="parentQuestionId"    column="parent_question_id"    />
+        <result property="source"    column="source"    />
+        <result property="status"    column="status"    />
+        <result property="delFlag"    column="del_flag"    />
+        <result property="createBy"    column="create_by"    />
+        <result property="createTime"    column="create_time"    />
+        <result property="updateBy"    column="update_by"    />
+        <result property="updateTime"    column="update_time"    />
+        <result property="remark"    column="remark"    />
+    </resultMap>
+
+    <sql id="selectInterviewQuestionVo">
+        select id, session_id, user_id, bank_question_id, question_no, question_type, question_content, reference_answer, key_points, is_follow_up, parent_question_id, source, status, del_flag, create_by, create_time, update_by, update_time, remark from interview_question
+    </sql>
+
+    <select id="selectInterviewQuestionList" parameterType="InterviewQuestion" resultMap="InterviewQuestionResult">
+        <include refid="selectInterviewQuestionVo"/>
+        <where>  
+            <if test="userId != null"> and user_id = #{userId}</if>
+            <if test="sessionId != null "> and session_id = #{sessionId}</if>
+            <if test="questionType != null  and questionType != ''"> and question_type = #{questionType}</if>
+            <if test="questionContent != null  and questionContent != ''"> and question_content like concat('%', #{questionContent}, '%')</if>
+            <if test="isFollowUp != null  and isFollowUp != ''"> and is_follow_up = #{isFollowUp}</if>
+            <if test="source != null  and source != ''"> and source = #{source}</if>
+            <if test="status != null  and status != ''"> and status = #{status}</if>
+        </where>
+    </select>
+    
+    <select id="selectInterviewQuestionById" parameterType="Long" resultMap="InterviewQuestionResult">
+        <include refid="selectInterviewQuestionVo"/>
+        where id = #{id}
+    </select>
+
+    <insert id="insertInterviewQuestion" parameterType="InterviewQuestion" useGeneratedKeys="true" keyProperty="id">
+        insert into interview_question
+        <trim prefix="(" suffix=")" suffixOverrides=",">
+            session_id,
+            user_id,
+            <if test="bankQuestionId != null">bank_question_id,</if>
+            <if test="questionNo != null">question_no,</if>
+            <if test="questionType != null">question_type,</if>
+            <if test="questionContent != null and questionContent != ''">question_content,</if>
+            <if test="referenceAnswer != null">reference_answer,</if>
+            <if test="keyPoints != null">key_points,</if>
+            <if test="isFollowUp != null">is_follow_up,</if>
+            <if test="parentQuestionId != null">parent_question_id,</if>
+            <if test="source != null">source,</if>
+            <if test="status != null">status,</if>
+            <if test="delFlag != null">del_flag,</if>
+            <if test="createBy != null">create_by,</if>
+            <if test="createTime != null">create_time,</if>
+            <if test="updateBy != null">update_by,</if>
+            <if test="updateTime != null">update_time,</if>
+            <if test="remark != null">remark,</if>
+         </trim>
+        <trim prefix="values (" suffix=")" suffixOverrides=",">
+            #{sessionId},
+            #{userId},
+            <if test="bankQuestionId != null">#{bankQuestionId},</if>
+            <if test="questionNo != null">#{questionNo},</if>
+            <if test="questionType != null">#{questionType},</if>
+            <if test="questionContent != null and questionContent != ''">#{questionContent},</if>
+            <if test="referenceAnswer != null">#{referenceAnswer},</if>
+            <if test="keyPoints != null">#{keyPoints},</if>
+            <if test="isFollowUp != null">#{isFollowUp},</if>
+            <if test="parentQuestionId != null">#{parentQuestionId},</if>
+            <if test="source != null">#{source},</if>
+            <if test="status != null">#{status},</if>
+            <if test="delFlag != null">#{delFlag},</if>
+            <if test="createBy != null">#{createBy},</if>
+            <if test="createTime != null">#{createTime},</if>
+            <if test="updateBy != null">#{updateBy},</if>
+            <if test="updateTime != null">#{updateTime},</if>
+            <if test="remark != null">#{remark},</if>
+         </trim>
+    </insert>
+
+    <update id="updateInterviewQuestion" parameterType="InterviewQuestion">
+        update interview_question
+        <trim prefix="SET" suffixOverrides=",">
+            <if test="sessionId != null">session_id = #{sessionId},</if>
+            <if test="bankQuestionId != null">bank_question_id = #{bankQuestionId},</if>
+            <if test="questionNo != null">question_no = #{questionNo},</if>
+            <if test="questionType != null">question_type = #{questionType},</if>
+            <if test="questionContent != null and questionContent != ''">question_content = #{questionContent},</if>
+            <if test="referenceAnswer != null">reference_answer = #{referenceAnswer},</if>
+            <if test="keyPoints != null">key_points = #{keyPoints},</if>
+            <if test="isFollowUp != null">is_follow_up = #{isFollowUp},</if>
+            <if test="parentQuestionId != null">parent_question_id = #{parentQuestionId},</if>
+            <if test="source != null">source = #{source},</if>
+            <if test="status != null">status = #{status},</if>
+            <if test="delFlag != null">del_flag = #{delFlag},</if>
+            <if test="createBy != null">create_by = #{createBy},</if>
+            <if test="createTime != null">create_time = #{createTime},</if>
+            <if test="updateBy != null">update_by = #{updateBy},</if>
+            <if test="updateTime != null">update_time = #{updateTime},</if>
+            <if test="remark != null">remark = #{remark},</if>
+        </trim>
+        where id = #{id}
+    </update>
+
+    <delete id="deleteInterviewQuestionById" parameterType="Long">
+        delete from interview_question where id = #{id}
+    </delete>
+
+    <delete id="deleteInterviewQuestionByIds" parameterType="String">
+        delete from interview_question where id in 
+        <foreach item="id" collection="array" open="(" separator="," close=")">
+            #{id}
+        </foreach>
+    </delete>
+
+    <!-- 删场次时按 session_id 级联清理 -->
+    <delete id="deleteInterviewQuestionBySessionIds" parameterType="String">
+        delete from interview_question where session_id in
+        <foreach item="sessionId" collection="array" open="(" separator="," close=")">
+            #{sessionId}
+        </foreach>
+    </delete>
+</mapper>
