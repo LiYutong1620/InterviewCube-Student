@@ -7,6 +7,7 @@ import org.springframework.stereotype.Service;
 import com.ruoyi.interview.mapper.InterviewQuestionMapper;
 import com.ruoyi.interview.domain.InterviewQuestion;
 import com.ruoyi.interview.service.IInterviewQuestionService;
+import com.ruoyi.interview.utils.StudentDataScopeUtils;
 
 /**
  * 面试题目Service业务层处理
@@ -53,6 +54,7 @@ public class InterviewQuestionServiceImpl implements IInterviewQuestionService
     @Override
     public int insertInterviewQuestion(InterviewQuestion interviewQuestion)
     {
+        StudentDataScopeUtils.requireManage("面试题目");
         interviewQuestion.setCreateTime(DateUtils.getNowDate());
         return interviewQuestionMapper.insertInterviewQuestion(interviewQuestion);
     }
@@ -66,6 +68,7 @@ public class InterviewQuestionServiceImpl implements IInterviewQuestionService
     @Override
     public int updateInterviewQuestion(InterviewQuestion interviewQuestion)
     {
+        StudentDataScopeUtils.requireManage("面试题目");
         interviewQuestion.setUpdateTime(DateUtils.getNowDate());
         return interviewQuestionMapper.updateInterviewQuestion(interviewQuestion);
     }
@@ -79,6 +82,7 @@ public class InterviewQuestionServiceImpl implements IInterviewQuestionService
     @Override
     public int deleteInterviewQuestionByIds(Long[] ids)
     {
+        StudentDataScopeUtils.requireManage("面试题目");
         return interviewQuestionMapper.deleteInterviewQuestionByIds(ids);
     }
 
@@ -91,6 +95,7 @@ public class InterviewQuestionServiceImpl implements IInterviewQuestionService
     @Override
     public int deleteInterviewQuestionById(Long id)
     {
+        StudentDataScopeUtils.requireManage("面试题目");
         return interviewQuestionMapper.deleteInterviewQuestionById(id);
     }
 }
