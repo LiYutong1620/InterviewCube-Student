@@ -65,8 +65,15 @@ select @student02Id, @studentRoleId from dual where @student02Id is not null and
 --
 --    菜单树形状（合计 49 条）：
 --      学生端目录                       1 条   path='student', menu_type='M'
---        +-- 8 个模块菜单               8 条   每个模块的 interview:xxx:list 挂在这里
---              +-- 每个模块 5 个按钮   40 条   query / add / edit / remove / export
+--        +-- 7 个模块菜单               7 条   每个模块的 interview:xxx:list 挂在这里
+--              +-- 每个模块 5 个按钮   35 条   query / add / edit / remove / export
+--              +-- 「面试环节」下另有   6 条   qa 的 6 个按钮（含降级来的 interview:qa:list）
+--
+--    ⚠️ 2026-09-28：「面试问答」并入「面试环节」，不再有独立的 qa 模块菜单（8 → 7）。
+--       它的 6 个 interview:qa:* 按钮改挂到「模拟面试场次」模块菜单下 ——
+--       仍在第二层，下面 4.3 的绑定照样能取到，学生权限一个不少。
+--       ⚠️ 其中 :list 是从 C 型模块菜单**降级**过来的 F 型按钮：删 C 菜单会连它一起删，
+--          而后端 InterviewQaController.list 正用着它 → 不补回来学生立刻 403。
 --
 --    注意：必须排除 interview:data:all —— 它同样挂在「学生端」目录下，
 --    但那是给后台端的「全量数据权限」，学生拿到就能看所有学生的数据
@@ -77,14 +84,15 @@ set @studentDirId = (select menu_id from sys_menu where path = 'student' and men
 insert ignore into sys_role_menu (role_id, menu_id)
 select @studentRoleId, @studentDirId from dual where @studentRoleId is not null and @studentDirId is not null;
 
--- 4.2 目录下的一级菜单（8 个模块，含各自的 interview:xxx:list 权限）
+-- 4.2 目录下的一级菜单（7 个模块，含各自的 interview:xxx:list 权限）
+--     2026-09-28 起「面试问答」已并入「面试环节」，这里只有 7 条
 insert ignore into sys_role_menu (role_id, menu_id)
 select @studentRoleId, menu_id from sys_menu
 where parent_id = @studentDirId
   and @studentRoleId is not null
   and (perms is null or perms <> 'interview:data:all');
 
--- 4.3 再下一级（每个模块的 5 个按钮）
+-- 4.3 再下一级（每个模块的 5 个按钮 + 「面试环节」下 qa 的 6 个按钮）
 --     若以后菜单层级加深，这里需要再加一段；跑完第 5 步的校验能立刻发现
 insert ignore into sys_role_menu (role_id, menu_id)
 select @studentRoleId, menu_id from sys_menu

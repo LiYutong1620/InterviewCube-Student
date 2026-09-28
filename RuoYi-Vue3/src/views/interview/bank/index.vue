@@ -149,6 +149,7 @@ import { checkPermi } from "@/utils/permission"
 import BankViewDrawer from "./view"
 
 const { proxy } = getCurrentInstance()
+const route = useRoute()
 const {
   interview_question_type,
   student_industry,
@@ -237,6 +238,18 @@ function handleExport() {
   }, `bank_${new Date().getTime()}.xlsx`)
 }
 
+/**
+ * 支持从首页下钻时带筛选条件进来（如「薄弱点练习」→ /student/bank?questionType=2）。
+ * 只回填查询区里已有的三个条件，不引入新的查询项。
+ */
+function applyRouteQuery() {
+  const { questionType, industry, difficulty } = route.query
+  if (questionType) queryParams.value.questionType = String(questionType)
+  if (industry) queryParams.value.industry = String(industry)
+  if (difficulty) queryParams.value.difficulty = String(difficulty)
+}
+
+applyRouteQuery()
 getList()
 </script>
 

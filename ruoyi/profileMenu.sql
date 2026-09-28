@@ -27,6 +27,14 @@ from dual
 where @studentDirId is not null
   and not exists (select 1 from sys_menu where perms = 'interview:profile:list');
 
+-- 3b. 修正路由名称（route_name）—— 必须与前端内置路由区分开。
+--     后端 getRouteName() 在 route_name 为空时取 path 首字母大写 → 'Profile'，
+--     会与前端 constantRoutes 的 /user/profile（个人中心，name='Profile'）撞名；
+--     vue-router 的 addRoute() 遇到同名路由会顶掉旧路由，导致点击头像「个人中心」404。
+update sys_menu set route_name = 'StudentProfile'
+ where perms = 'interview:profile:list' and menu_type = 'C'
+   and (route_name is null or route_name = '');
+
 -- 4. 取模块菜单 ID —— 用反查而非 LAST_INSERT_ID()，菜单已存在时同样取得到
 set @parentId = (select menu_id from sys_menu where perms = 'interview:profile:list' limit 1);
 

@@ -2,8 +2,8 @@
 
 > **定位**：基于若依（RuoYi-Vue，Spring Boot 3 + Vue3）开发的 Web 版 AI 模拟面试系统，面向学生 / 应届生。原产品规划功能清单保持不变，载体由 APP 改为网页端。
 > **本仓库范围**：只做**纯学生端**。后台端 / 企业端由组员各自独立开发，**后期才合并**。
-> **最后更新**：2026-09-22　|　**本文件已加入 `.gitignore`**，只在本地维护，不随仓库分发
-> **配套文档**：`doc/学生端对外契约.md`（三端合并契约）· `doc/CRUD字段清单.md`（8 模块字段取舍）· `doc/面试流程四件套形态方案.md`（⑤ 四个流程模块的页面形态，方案 A 已拍板，**S1~S5 全部落地**）· `sql/README.md`（14 步重建顺序）
+> **最后更新**：2026-09-28　|　**本文件已加入 `.gitignore`**，只在本地维护，不随仓库分发
+> **配套文档**：`doc/学生端对外契约.md`（三端合并契约）· `doc/CRUD字段清单.md`（8 模块字段取舍）· `doc/面试流程四件套形态方案.md`（⑤ 四个流程模块的页面形态，方案 A 已拍板，**S1~S5 全部落地**）· `sql/README.md`（3 步重建：基础库 + quartz + `student_init.sql`）
 
 ---
 
@@ -12,7 +12,7 @@
 | 阶段 | 内容 | 状态 |
 | :--- | :--- | :--- |
 | **一** | 只做 CRUD（生成 → 学生端角色 / 菜单 → 数据隔离） | ✅ **完成**，仅剩 2 项运行时验证（见 §5.2） |
-| **二** | CRUD 语义收紧 + 前端页面改造（AI 押后） | ✅ **完成**（8 / 8 模块；⑤ 流程四件套 S1~S5 全部落地，`@Excel` 清理与文档回填已收口） |
+| **二** | CRUD 语义收紧 + 前端页面改造（AI 押后） | ✅ **完成**（8 / 8 模块；⑤ 流程四件套 S1~S5 全部落地，`@Excel` 清理与文档回填已收口；**新手引导 09-28 补做，见 §2.10**；**登录与账号 09-28，见 §2.11**；**学生端首页 09-28，见 §2.12**；**「面试问答」并入「面试环节」09-28，见 §2.13**） |
 | **三** | AI 面试闭环 | ⏸ **押后**，等阶段二定稿 |
 | **—** | 多端合并准备（冻结契约 + 清地雷） | ✅ 交付物已产出（见 §4） |
 
@@ -26,7 +26,7 @@
 | 4 | 题库题目 | `question_bank` | 共享 · 只读 | ✅ 09-22 | ✅ 09-22 |
 | 5 | 模拟面试场次 | `interview_session` | 1:N · 流程 | ✅ 09-22 | ✅ 09-22 |
 | 6 | 面试题目 | `interview_question` | 1:N · 流程 | ✅ 09-22 | ✅ 09-22 |
-| 7 | 面试问答 | `interview_qa` | 1:N · 流程 | ✅ 09-22 | ✅ 09-22 |
+| 7 | 面试问答 | `interview_qa` | 1:N · 流程 | ✅ 09-22 | ✅ 09-22（**页面 09-28 并入「面试环节」**，见 §2.13；模块 / 接口 / 权限点都还在） |
 | 8 | 面试复盘报告 | `interview_report` | 1:1 · 流程 | ✅ 09-22 | ✅ 09-22 |
 
 > 逐模块字段取舍见 `doc/CRUD字段清单.md` 第二节；`@Excel` 与中文枚举文案的清理进度见该文档 4.1 —— **8 个模块已全部改完（2026-09-22，S5）**。
@@ -335,6 +335,219 @@
 - [ ] **结构自检**：Vue 模板标签配对；`<script setup>` 抽出来过 `node --check`；Mapper XML 用 `xml.etree` 验良构
 - [ ] **文档**：更新 `doc/CRUD字段清单.md` 对应小节 + 本文档 §0 进度表
 
+### 2.10 新手引导流程（2026-09-28 新增）✅
+
+面向学生的 5 步引导向导，**全部落地在前端**。
+
+核心发现：数据契约早就留好了 —— `student_profile.guide_status`（`CHAR(1) DEFAULT '0'`，字典 `student_guide_status`）在建表时就存在，后端 `StudentProfile.java` / `StudentProfileMapper.xml` 的 select / insert / update 也全通，只是**没有任何代码去写它**，前端档案页仅把它渲染成一个只读标签。所以本次**不改表、不改后端、不加后端接口**。
+
+| 步骤 | 一级功能 | 落地内容 |
+| :- | :--- | :--- |
+| 1 | 欢迎引导 | 欢迎页（品牌与价值主张）+ 引导轮播（3 屏图文）+ 跳过引导 |
+| 2 | 岗位画像 | 行业选择（`student_industry`）/ 岗位选择（自由文本 + 快捷标签）/ 难度选择（`student_difficulty`） |
+| 3 | 简历上传 | 简历导入（`file-upload`，pdf / doc / docx，≤10MB）；解析状态占位（解析能力属阶段三） |
+| 4 | 目标企业 | 企业类型选择（`student_company_type`） |
+| 5 | 引导完成 | 摘要回显 + 进入首页 + **引导后推荐**（推荐岗位 / 推荐练习，取自 `question_bank`） |
+
+**引导进度**由页面骨架承担：`el-steps` 步骤指示（当前步骤 / 总步骤）+ 底部「第 N / 5 步」+「返回上一步」。
+
+| 项 | 落地方式 |
+| :--- | :--- |
+| 路由 | `constantRoutes` 新增 `/guide`，`name = 'StudentGuide'`，`hidden: true`，**全屏无 Layout**（对齐已有的 `/lock` 写法） |
+| 页面 | `src/views/interview/guide/index.vue`（`<script setup name="StudentGuide">`，与路由名一致） |
+| 落库 | 岗位画像 + 目标企业 → **同一条** `student_job_profile`；简历 → `student_resume`；引导状态 → `student_profile.guide_status` |
+| 完成引导 | `finishGuide(id)`（`api/interview/profile.js`）→ `PUT /interview/profile`，只带 `{ id, guideStatus: '1' }`；档案不存在时先 `addProfile` 建一条再取回 id |
+| 自动进入 | 首页 `views/index.vue` 的 `onMounted` 读 `guide_status`，`!= '1'` 且本机未跳过 → 跳 `/guide` |
+| 跳过引导 | 只写 localStorage（`interview_guide_dismissed`），**不改库**；首页入口保留，可随时重进 |
+| 复用 | 不新增接口，只用 `profile` / `jobprofile` / `resume` / `bank` 四个已有 API |
+
+**踩坑提醒**：`/guide` 占用了路由名 `StudentGuide`，已登记进 `doc/学生端对外契约.md` §6.1 的内置路由名全集与自查 SQL ②。后续新增菜单时不能再解析出这个名字 —— 否则重演个人中心 404。
+
+**验证**：`npm run build:prod` 通过（产物含 `guide-*.js` chunk，主包含 `StudentGuide`）；`<script setup>` 过 `node --check`；模板标签配对 88 = 76 闭 + 12 自闭合；两棵树 `diff` 无差异；换行符 CRLF。
+
+**顺带修掉的历史遗漏**：`ruoyi/vue/views/interview/profile/index.vue` 上次没跟着改成 `name="StudentProfile"`（暂存区仍是 `Profile`），拷贝回业务区就会让个人中心 404 复发。本次已同步，暂存区全量 `diff` 现在零差异。
+
+---
+
+### 2.11 WEB 端登录与账号（2026-09-28 新增）✅
+
+按需求清单补齐学生端 WEB 的登录能力。6 项需求全部落地：
+
+| # | 需求 | 优先级 | 落地情况 |
+| :- | :--- | :--- | :--- |
+| 1 | 手机号 + 验证码登录 | P0 | ✅ 登录页 Tab「验证码登录」 |
+| 2 | 手机号/账号 + 密码登录 | P0 | ✅ 登录页 Tab「密码登录」（`user_name` 就是手机号，两种都进得来） |
+| 3 | 微信登录（小程序/H5） | P1 | ✅ **仅 UI 占位**（第三个 Tab 有二维码占位框与说明，不接真实能力） |
+| 4 | 用户协议、隐私政策勾选 | P0 | ✅ 登录页 + 注册页勾选门控；协议正文页 `/agreement/user`、`/agreement/privacy`（占位正文） |
+| 5 | 手机号验证码注册 | P0 | ✅ 改造现有 `/register`（原为「账号+密码+图形验证码」） |
+| 6 | 手机号验证码重置密码 | P0 | ✅ 新增 `/forgetPwd` 页 |
+
+**短信通道：开发期 Mock。** 验证码写 Redis + 打 WARN 日志，不真发短信；并把验证码回显在接口响应里（`mockCode`），前端直接展示并自动填入，联调不用翻日志。预留了 `AliyunSmsSender` 占位（切 `interview.sms.channel=aliyun` 会**故意抛异常**，避免通道配错却静默以为发出去了）。
+
+**后端**（全部新增，不改 `ruoyi-common` / `ruoyi-framework` / `ruoyi-system`）：
+
+| 文件 | 作用 |
+| :--- | :--- |
+| `constant/AuthCodeConstants` | Redis key 前缀 + 频控阈值 + 手机号正则 |
+| `enums/SmsScene` | 场景枚举 `login` / `register` / `resetPwd`，**验证码按场景隔离** |
+| `service/ISmsSender` + `impl/DevMockSmsSender` + `impl/AliyunSmsSender` | 短信通道（接口 + 两个实现，靠 `@ConditionalOnProperty` 切换） |
+| `service/ISmsCodeService` + `impl/SmsCodeServiceImpl` | 验证码生成 / 存储 / 频控 / 校验 |
+| `service/IStudentAuthService` + `impl/StudentAuthServiceImpl` | 三个动作的编排（复用若依 TokenService / SysLoginService / ISysUserService） |
+| `domain/dto/*` | 4 个请求体 |
+| `mapper/StudentAuthMapper` + `resources/mapper/interview/StudentAuthMapper.xml` | `selectRoleIdByKey`（注册时绑学生角色） |
+| `controller/StudentAuthController` | `@Anonymous`，4 个接口 |
+
+**前端**：新增 `api/interview/auth.js`、`views/forgetPwd.vue`、`views/agreement/{user,privacy}.vue`；**重写** `views/login.vue`（三 Tab）、`views/register.vue`（手机号注册）；`store/modules/user.js` 加 `smsLogin` action；`router/index.js` 加 3 条全屏路由；`permission.js` 白名单加 `/forgetPwd`、`/agreement/*`。
+
+**两个刻意的取舍**：
+
+1. **登录页不持久化协议勾选**（每次进页面都要显式勾一次），注册页则由**服务端**强制校验 `agreed`。
+2. **短信登录不复用 `loadUserByUsername()`** —— 它会调 `SysPasswordService.validate()`，而那里依赖 `AuthenticationContextHolder` 里的密码，短信登录没有密码会 NPE。改用 `createLoginUser(SysUser)`（public，只装配权限）并自己补「账号停用」检查。
+
+**重写 login.vue / register.vue 的依据**：先用 `git log` + `git diff --stat` 确认这两个文件**自导入若依源码后从未被改动过**（两次提交都是 `A` 新增、无 `M`），所以重写不会丢任何定制。顺带把原文件里**硬编码的默认账号口令**去掉了。
+
+**已验证**：
+- 前端 9 个改动/新增模块全部经运行中的 Vite dev server 真实编译（HTTP 200、零错误），关键标识（4 个接口路径、4 个路由名、白名单、`smsLogin`、`mockCode`）均出现在编译产物里。
+- 开发库 `sys_config.sys.account.registerUser` 已置为 `true`；`sys_role` 里 `role_key='student'` 命中 `role_id=102`（Mapper 查询会取到它）。
+- 两棵树全量 diff 零漂移（后端 57/57、mapper xml 9/9、api 9/9、views 13/13）。
+- ✅ **后端已重新构建并重启**（2026-09-28 实测）：`POST /interview/auth/sms/send` 返回 `{"code":200,"mock":true,"mockCode":"887060"}`，Mock 短信通道工作正常。
+- ⚠️ **但学生账号测不了短信登录** —— `student01` / `student02` 的 `sys_user.phonenumber` 都是空的（只有 `admin` 有手机号）。详见 §2.12 末尾。
+
+---
+
+### 2.12 学生端首页（2026-09-28 新增）✅
+
+按功能清单「首页」章节重写 `views/index.vue`（261 行 → 约 1370 行）。本次落地**你明确点出的 9 行**：
+
+| 一级 | 二级 | 三级 | 优先级 | 落地情况 |
+| :--- | :--- | :--- | :--- | :--- |
+| 快速开始 | 开始面试 | 一键进入岗位选择 | P0 | ✅ 跳 `/student/session?start=1`，由场次页直接弹开「开始面试」对话框（选目标岗位） |
+| 快速开始 | 继续面试 | 续答未完成面试 | P0 | ✅ 取最近一条 `status ∈ {0,1}` 的场次，跳 `/student/qa?sessionId=x`；没有则置灰 + 提示 |
+| 成长状态 | 等级展示 | 面试小白 → 面霸等级 | P1 | ✅ 六级阶梯（面试小白 / 初出茅庐 / 渐入佳境 / 对答如流 / 面试达人 / 面霸）+ 进度条 |
+| 成长状态 | 积分展示 | 当前积分展示 | P1 | ✅ `current_points` 大数字 + 「再攒 N 积分升到 X」 |
+| 个性化推荐 | 岗位推荐 | 基于简历 / 历史推荐岗位 | P1 | ✅ 目标岗位（岗位画像默认项）+ 同行业热门岗位（题库 `job_name` 聚合，排除目标岗位与已练过的） |
+| 个性化推荐 | 薄弱点练习 | 低分维度推送题目 | P1 | ✅ 取最近报告五维最低项 → 映射题型 → 推 3 道题 + 「去题库练这一类」深链 |
+| 个性化推荐 | 真题范例入口 | 高频真题、优秀回答范例 | P1 | ✅ `source=1` 按 `use_count` 倒序取 3 道（题库详情里有参考答案） |
+| 最近报告 | 报告摘要 | 上次得分 / 雷达图缩略 | P1 | ✅ 总分 + echarts 五维雷达缩略 + 总体评价摘要 |
+| 运营位 | 顶部横幅/轮播图 | 滚动展示 | P2 | ✅ `el-carousel` 3 张静态运营位（阶段三可改成后台可配） |
+
+**功能清单里还有 3 行本次没做**（你没点，且缺数据源 / 依赖 AI）：
+
+- `成长状态 / 打卡 / 连续打卡天数`（P1）—— **没有打卡表**，8 张业务表里没有任何打卡字段，要做需要新增表 + 接口。
+- `实战热身 / 速答挑战 / 1 分钟速答`（P2）、`实战热身 / 即兴表达 / 即兴表达训练`（P2）—— 依赖 AI 出题与语音能力，属阶段三。
+
+**后端一行没改**：首页只用已有的 list 接口 + 2 个派生查询拼出来。
+
+| 数据块 | 数据来源 |
+| :--- | :--- |
+| 等级 / 积分 / 引导状态 | `GET /interview/profile/list?pageSize=1` |
+| 继续面试 / 历史岗位 | `GET /interview/session/list?pageSize=20&orderByColumn=id&isAsc=desc` |
+| 最近报告 | `GET /interview/report/list?pageSize=1`（后端已 `order by ir.id desc`，**不要再传 orderByColumn**） |
+| 目标岗位 | `GET /interview/jobprofile/list?pageSize=20&status=0` |
+| 真题范例 | `GET /interview/bank/list?source=1&orderByColumn=useCount&isAsc=desc&pageSize=3` |
+| 同行业岗位池 | `GET /interview/bank/list?industry=<目标岗位行业>&pageSize=20` |
+| 薄弱点推题 | `GET /interview/bank/list?questionType=<最弱维度映射>&orderByColumn=useCount&isAsc=desc&pageSize=3` |
+
+> `orderByColumn` 是若依 `startPage()` 自带能力（`PageDomain.getOrderBy()` → `toUnderScoreCase` → `order by use_count desc`，且有 `SqlUtil.escapeOrderBySql` 白名单），**不需要改后端**。
+
+**⚠️ 首页必须按 `userId` 过滤成「只看自己的」**：`StudentDataScopeUtils.scopeUserId()` 对管理员返回 `null`，所以实测 admin 登录时 `profile / session / report / jobprofile` 四个 list **返回的是全部学生的行**（实测拿到 `userId=103`，即 student01 的数据）。首页若直接取 `rows[0]`，管理员会看到别人的成长状态与报告。
+修法：统一用 `row.userId === userStore.id` 过滤 —— 学生端后端已限定，过滤是空操作；管理员则只看自己的，没有就显示空态。
+**不能用「按 `canViewAll` 整块隐藏」代替** —— 那样 admin 首页会只剩公共内容（这个方案实现过又被否掉了）。
+
+**两个前端启发式**（阶段三由 AI 替换，代码里已用注释标注）：
+
+1. **等级推导**：`student_profile.current_level` **没有字典、也没有任何后端代码写它**（DDL 默认值就是 `'小白'`），所以等级按 `current_points` 推导；若 `current_level` 被写成了阶梯以外的值，则以库里的为准。
+2. **薄弱点 → 题型映射**：完整性→行为面、逻辑性→case 面、流畅度→HR 面、深度→技术面、自信度→HR 面（按每个维度最吃哪种面试形式对应）。
+
+**顺带改的两处小接口**（都是为了兑现首页入口）：
+
+- `views/interview/session/index.vue` 支持 `?start=1` —— 进页面直接弹开「开始面试」对话框，兑现「一键进入岗位选择」。
+- `views/interview/bank/index.vue` 支持 `?questionType= / industry= / difficulty=` 回填查询区（**只回填已有的三个条件，不新增查询项**），给「薄弱点练习」做深链。
+
+**已验证（本次做了真机渲染验证，不再只靠编译）**：
+
+- 用本机 Chrome（headless + CDP）实际打开首页截图，**admin 视角**与**有数据的学生视角**各一张，**控制台零报错零警告**。
+- 有数据视角实测：`继续面试` 渲染成可用态（「产品经理」已答 2 / 5 题）、雷达图 canvas 真实渲染（`864×220`）、最近报告显示 `总分 1 / 产品经理 / 2026-09-22`。
+- 6 个接口全部用真实 HTTP 调通（含 `orderByColumn=useCount` 排序、`source=1` 过滤）。
+- 两棵树全量 diff 零漂移（97 个文件）。
+- ✅ **后端已被重新构建并重启**：`POST /interview/auth/sms/send` 实测返回 `{"code":200,"mock":true,"mockCode":"887060"}` —— 短信 Mock 通道工作正常（§2.11 里「尚未编译运行」的备注已作废）。
+- ⚠️ **发现的数据缺口**：`student01` / `student02` 的 `sys_user.phonenumber` **都是空的**（只有 `admin` 有 15888888888）。所以**短信登录 / 手机号注册目前只能用 admin 测**，学生账号测不了 —— 联调前建议先给学生账号补手机号。
+
+---
+
+### 2.13 「面试问答」并入「面试环节」（2026-09-28 新增）✅
+
+**需求**：左侧的「面试问答」（`/student/qa`）页面直接合并到「面试环节」（`/student/session`）。
+
+**结果**：`/student/session` 变成**双模式页面**，`/student/qa` 路由彻底消失。后端**零改动**。
+
+| 项 | 改前 | 改后 |
+| :--- | :--- | :--- |
+| 侧边栏模块菜单 | 8 个（含「面试问答」） | **7 个**（「面试问答」不再单独出现） |
+| 作答页 URL | `/student/qa?sessionId=x` | **`/student/session?sessionId=x`** |
+| `/student/session`（无参） | 场次列表 | 场次列表（不变） |
+| `/student/session?sessionId=` | — | 作答 / 回顾界面（**新增**） |
+| `/student/qa` | 作答页 | **404（路由取消）** |
+| `interview:qa:*` 权限点 | 6 个（1 个 `:list` 挂在 C 型模块菜单上 + 5 个 F 型按钮） | **6 个一个不少**：5 个按钮改挂到「面试环节」菜单下，`:list` **降级成第 6 个 F 型按钮**（⚠️ 见下） |
+| 学生端菜单树 | 49 条 | **49 条**（1 目录 + 7 模块菜单 + 41 按钮 —— 模块菜单 8 → 7、按钮 40 → 41，**总数守恒**） |
+| 学生角色菜单绑定 | 49 | **49**（不变） |
+
+**为什么权限点必须留着（以及一个真实踩过的坑）**：后端 `InterviewQaController` 的 `list` / `export` / `query` / `add` / `edit` / `remove` 六个接口都带 `@PreAuthorize('interview:qa:xxx')`。合并后的作答面板仍要调 `listQa`（`interview:qa:list`）和 `submitQa`（`interview:qa:add`）—— 权限点删掉学生立刻 403。所以做法是**保留按钮、换父菜单**：按钮是 F 型（`visible='0'`），不进侧边栏，挂在哪一级对用户不可见，只影响「角色管理」的权限勾选树。
+
+> ⚠️ **2026-09-28 回归（已修）**：每个模块有 **6 个**权限点，其中 `:list` 平时挂在 **C 型模块菜单**上，另外 5 个才是 F 型按钮。第一版只搬了 5 个按钮、然后把 C 菜单删掉 —— **`interview:qa:list` 跟着一起没了**。症状：`student01` 建完场次进入 `/student/session?sessionId=7`，作答面板加载时调 `GET /interview/qa/list` → **403「当前操作没有权限」**。
+> **修法**：把 `:list` **降级成一条 F 型按钮**（`menu_name='面试问答列表'`，`order_num=11`），与另外 5 个并列挂到「模拟面试场次」下，并补回角色绑定。权限点总数因此守恒：**8 模块 × 6 = 48 个，一个不多一个不少**。
+> **为什么上一轮没发现**：验证用的是 `admin`（超管由若依自动授予 `*:*:*`，永远通过），而 403 只在**非超管账号**上暴露。而且上一轮的校验断言写成「`qa_permi_cnt = 5` 权限点一个不少」—— **这个断言本身就是错的**，正确值是 **6**。现已补一个对账脚本 `.workbuddy-ai/tmp/check_perms.py`（后端 `@PreAuthorize` 用到的权限点 vs `sys_menu.perms` 的差集），以后这类漏配一条命令就能发现。
+
+**前端改动**：
+
+| 文件 | 改动 |
+| :--- | :--- |
+| `views/interview/session/answer.vue` | **新增**。原 `qa/index.vue` 的作答 / 回顾界面抽成受控子组件，接 `sessionId` prop、emit `back`；顺手删掉原页那段「没带 sessionId 就显示空态 + 场次下拉」的逻辑（父页面负责这个取舍） |
+| `views/interview/session/index.vue` | 改双模式：`sessionId = route.query.sessionId`、`listMode = !sessionId`；列表内容（查询区 / 工具栏 / 表格 / 分页）用 `v-if="listMode"` 门控，顶部 `v-if="sessionId"` 渲染作答面板；`继续作答` 与「建场后自动进入」都改指 `/student/session?sessionId=`；新增 `handleBackToList()` 与 `watch(sessionId)`（返回列表时刷新进度） |
+| `views/interview/qa/index.vue` | **删除**（整目录）。内容已在 `session/answer.vue` |
+| `views/index.vue` | 首页「继续面试」改指 `/student/session?sessionId=` |
+| `api/interview/qa.js` | **保留**（`answer.vue` 与 `question/index.vue` 仍在用） |
+
+> 顺带修掉 `session/index.vue` 里 1 处 `:underline="false"`（EP 2.13.1 弃用警告）→ `underline="never"`。仓库里还剩 4 处旧写法（`views/login.vue` ×2、`views/interview/{report,resume}/index.vue`），仍是已知小尾巴。
+
+**SQL 资产改动**（菜单脚本是生成物，改源文件再重跑生成器）：
+
+| 文件 | 改动 |
+| :--- | :--- |
+| `ruoyi/qaMenu.sql` | 去掉 C 型模块菜单那条 insert；**6 个**按钮的父菜单改为按 `perms='interview:session:list'` 反查；`order_num` 6~11（避免与「面试环节」自己的 1~5 重号）。`:list` 排在最后（11）—— 它是「降级」来的，不重排是为了让「新库直接建」与「旧库跑迁移」得到完全相同的形状 |
+| `sql/student_qa_merge_menu.sql` | **新增**。迁移脚本 5 步：改挂按钮父菜单 + `order_num` → 解绑并删掉旧的 **C 型**菜单（`delete` 带 `menu_type='C'` 限定，否则会把降级后的 F 型 `:list` 一起删掉）→ **重建 `interview:qa:list`（F 型，`order_num=11`）并补绑「学生」角色** → 3 个校验。幂等（`order_num <= 5` 守卫 + `not exists` 判据 + `insert ignore`） |
+| `.workbuddy-ai/tmp/merge_menu_sql.py` | 生成器支持「无模块菜单的模块」（`has_menu=False` + `parent_prefix` + 显式 `perms` 列表），并把迁移节接进 `student_menu.sql`；新增断言「迁移节里必须有重建 `:list` 的 insert 和补绑语句」 |
+| `.workbuddy-ai/tmp/merge_sql_further.py` | `student_patch.sql` 由 4 节 → **5 节**（第 5 节 = 上述迁移）；`student_init.sql` 仍 6 节，第 2 节标题改为「50 条（7 个模块菜单 + 41 按钮 + 数据权限点）」；总校验 `menu_cnt` / `role_menu_cnt` 均 **49**、`qa_permi_cnt` **6**，`legacy_qa_menu_cnt` 查询补上 `menu_type='C'` |
+| `sql/student_menu.sql` / `student_init.sql` / `student_patch.sql` | 重跑生成器产出（`student_menu.sql` 50 条 insert；末尾校验含 `legacy_qa_menu_cnt` / `qa_permi_cnt`） |
+| `sql/student_role_user.sql` | 注释里的菜单树形状改为 49 条（1 目录 + 7 模块菜单 + 41 按钮）、8 模块 → 7 模块，并注明 `:list` 是降级来的；校验预期 `menu_cnt = 49` |
+
+**验证**（全部实测，不是推理）：
+
+**第一轮 —— 合并本身**
+
+1. **临时库全量重建**：新建 `ry_test_init` → 跑「基础库 + quartz + `student_init.sql`」→ 退出码 0，校验全对。跑完已删库。
+2. **迁移收敛**：在临时库里**人工造回旧形状**（补一条 C 型 qa 菜单 + 按钮挂回去 + 绑角色），再跑 `student_qa_merge_menu.sql` → 收敛，按钮父菜单 = 「面试环节」、`order_num` 6~10。
+3. **`getRouters()` 实测**：`/student` 下只有 7 个模块（bank / jobprofile / profile / question / report / resume / session），**无 `qa`** —— 侧边栏就是它的渲染结果。
+4. **真机渲染**（无头 Chrome + CDP）：`/student/session` 列表态（`table=1 / answerBar=0`）、`/student/session?sessionId=5` 作答态（`answerBar=1 / navCell=5 / textarea=1`，场次条显示「进行中 进度 2/5」）、`/student/qa?sessionId=5` → **404 页**；三次运行**控制台零报错零警告**。
+5. 两棵树全量 diff 零漂移（97 个文件）。
+
+**第二轮 —— 回归修复（2026-09-28 下午）**
+
+6. **权限点对账**：`.workbuddy-ai/tmp/check_perms.py` 扫后端 `@PreAuthorize` 的 48 个 `interview:*` 权限点 vs `sys_menu.perms` → 修复前差集**恰好 1 个**（`interview:qa:list` @ `InterviewQaController.java:45`）；修复后 **`exit 0`、零差集**（库里 49 个 = 48 + `interview:data:all`）。
+7. **临时库全量重建（新产物）**：新建 `ry_test_init2` → 「基础库 + quartz + `student_init.sql`」→ `mysql exit=0`；**14 项指标全对**：`table 8` / `menu_cnt 49` / `user_cnt 2` / `role_menu_cnt 49` / `data_all_bound 0` / `legacy_qa_menu_cnt(C型) 0` / **`qa_permi_cnt 6`** / `dict 13·45` / `bank 26` / `register_enabled 1` / 模块菜单 7 / 「面试环节」下按钮 **11**（session 5 + qa 6）/ 总菜单数 135（基础库 85 + 学生端 50）。
+8. **迁移收敛（旧形状 → 新形状）**：在 `ry_test_init2` 里人工造回**合并前**的旧形状（C 型「面试问答」菜单 + 5 个按钮挂它下面、`order_num` 1~5、绑角色 → `legacy 1 / qa_permi 6 / role_menu 49`），跑 `student_qa_merge_menu.sql` → 5 个按钮改挂到「模拟面试场次」、`order_num` 6~10、**新增 F 型「面试问答列表」（`order_num=11`）**、C 型菜单删除 → `legacy 0 / qa_permi 6 / role_menu 49 / menu_cnt 49`；**再跑一次零变化**（幂等）。
+9. **`student_init.sql` 幂等**：重跑前后 `menu_cnt` / 总菜单数 / `role_menu` / 字典数据 / 账号数**完全一致**。
+10. **开发库修复 + API 层验证**：对 `mlf_student` 执行迁移 → 新增 `menu_id=2050` F 型「面试问答列表」；**用临时学生账号（`qa_verify_tmp`，绑定「学生」角色 102）真实登录**（过图形验证码）→ `/getInfo` 返回 **48 个权限**、`interview:qa:*` 六个全在；`GET /interview/qa/list?sessionId=7` → **HTTP 200 / code=200「查询成功」**（修复前是 403）；`/interview/question/list` 同样 200。
+    - ⚠️ `/interview/session/7` 对临时账号返回 `code=500 无权操作或查看该模拟面试场次数据` —— 这是**数据隔离**的预期行为（场次 7 属于 student01），不是权限问题；student01 本人访问是 200。
+11. **前端端到端复现用户路径**（无头 Chrome + CDP，用户报的就是前端现象）：临时学生账号登录 → `POST /interview/jobprofile` 建岗位画像（`id=4`）→ `POST /interview/session` 建场次（**`id=8`**，`S20260928174417565`）→ 带 cookie 打开 `/student/session?sessionId=8` → 探针结果：`permErr=false`（**没有「当前操作没有权限」**）、`.session-bar=1`、`.question-card=1`、`.nav-card=1`、`.el-table=0`（正确切到作答模式）、**控制台零报错零警告**；截图确认场次条「进行中 进度 0/3 本题已用 00:08」、题目导航 1/2/3、「第 1 题 行为面」、作答框、「导出」/「提前结束」按钮都在。
+    - 验证完**临时账号与业务数据全部删除**（`sys_user` / `sys_user_role` / `interview_session` / `student_job_profile` 零残留），学生角色菜单绑定仍 49、qa 权限点仍 6。
+12. **开发库幂等**：重跑迁移脚本 → `qa_cnt 6 / list_cnt 1 / student_qa_perm 6 / role_menu_cnt 49`，零变化。
+13. 两棵树全量 diff 零漂移（97 个文件）。
+
+> ⚠️ **教训（已写入 `TRAPS.md`）**：上一轮的验证用的是 `admin` 账号，而超管由若依自动授予 `*:*:*` —— **任何权限漏配都不会暴露**。涉及权限的验证必须用**非超管账号**。另外「`:list` 挂在 C 型模块菜单上」这条规则契约文档里写着，但校验断言没照它查（写成 `qa_permi_cnt = 5`），所以漏了。
+
+**⚠️ 注意**：菜单是登录时从后端拉的，**改完菜单要重新登录（或刷新页面重新 `getRouters`）才看得到侧边栏变化**。
+
 ---
 
 ## 3. 阶段三：AI 面试闭环 ⏸ 押后
@@ -382,6 +595,13 @@ CRUD 与页面形态定稿后再评估。届时顺带解决 `session_id` / `ques
   - 每个文件末尾加校验查询，应返回 **6 行**（1 模块菜单 + 5 按钮）
   - 效果：第 4 ~ 11 步可**反复重放**，第 13 步绑定数恒为 **49** → 合并演练可以跑第二遍、第三遍
   - 不覆盖的情形：菜单**已存在但 `parent_id` 挂错**时不会自动纠正（干净库重建不会出现；真遇到手工改一行即可）
+- [x] **①-6** 修「学生档案」菜单 `route_name` 撞名（2026-09-28）
+  - 现象：登录后点右上角头像「个人中心」→ `/user/profile` 显示 **404**
+  - 根因：后端 `getRouteName()` 在 `route_name` 为空时取 `path` 首字母大写当路由名 —— 「学生档案」`path = 'profile'` 生成路由名 `Profile`，与前端内置路由 `/user/profile`（个人中心，name 也是 `Profile`）**同名**；前端 `router.addRoute()` 遇同名会**先移除旧路由**，于是个人中心被顶掉，落入 `/:pathMatch(.*)*` 兜底
+  - 连带 bug：`store/modules/user.js` 的「首次登录强制改密码」用 `router.push({ name: 'Profile' })`，会跳到学生档案
+  - 修法：菜单显式设 `route_name = 'StudentProfile'`（URL 与权限标识不变）；前端 `views/interview/profile/index.vue` 的 `<script setup name>` 同步改为 `StudentProfile`（keep-alive 按**组件名**匹配，须与路由名一致）
+  - 落库：`sql/student_patch.sql` 第 3 节（幂等）；`ruoyi/profileMenu.sql`、`sql/student_menu.sql`、`sql/student_init.sql` 第 2 节同步
+  - 约定已写入 `doc/学生端对外契约.md` 第六节 6.1（含两条自查 SQL）
 
 ### 4.4 交付物
 
@@ -390,10 +610,8 @@ CRUD 与页面形态定稿后再评估。届时顺带解决 `session_id` / `ques
 | `doc/学生端对外契约.md` | **核心交付物**：冻结学生端对外边界，三端合并以此为准 |
 | `doc/CRUD字段清单.md` | 8 个模块的字段取舍（显示 / 隐藏 / 只读 / 校验）+ 3 个业务决策 + 字典值域 |
 | `sql/README.md` | SQL 文件分类说明：哪些能执行、从零重建的 **3 步**顺序、内置账号 |
-| **`sql/student_init.sql`** | **一键重建**：8 张表 + 50 条菜单 + 角色账号绑定 + 13 个字典类型 + 26 道演示题（5 节）。**学生端只跑这一个** |
-| `sql/student_patch.sql` | 旧库补丁：改列注释 + 角色去重（已建库、不想重建时用） |
 | **`sql/student_init.sql`** | **一键重建**：8 张业务表 + 50 条菜单 + 角色账号绑定 + 13 个字典类型 + 26 道演示题（5 节）。**三端合并只收集这一个** |
-| `sql/student_patch.sql` | 旧库补丁：改列注释 + 角色去重（已建过库、不想重建时用） |
+| `sql/student_patch.sql` | 旧库补丁（**3 节**）：改列注释 + 角色去重 + 修「学生档案」菜单 `route_name`（已建过库、不想重建时用） |
 | `sql/` 下其余 7 个 + `ruoyi/` 下 9 个 | 已被上面两个吸收的**源文件**，留档用，不要单独跑 |
 
 ### 4.5 干净库重建的「五块拼图」
@@ -509,6 +727,14 @@ CRUD 与页面形态定稿后再评估。届时顺带解决 `session_id` / `ques
 | `RuoYi-Vue/ruoyi-admin/.../interview/**` ↔ `ruoyi/main/java/com/ruoyi/interview/**` | `RuoYi-Vue3/src/views/interview/**` ↔ `ruoyi/vue/views/interview/**` |
 
 `ruoyi/` 是生成器产出暂存区，**两份必须字节一致**。收尾用 `diff -rq` 校验。
+
+同步脚本：`.workbuddy-ai/tmp/sync_student_staging.py` —— **整目录镜像**，范围 = 学生端改过的全部文件：
+
+- 后端：`java/com/ruoyi/interview/**` + `resources/mapper/interview/*.xml`
+- 前端：`api/interview/**` + `views/interview/**` + `views/{index,login,register,forgetPwd}.vue` + `views/agreement/*` + `router/index.js` + `permission.js` + `store/modules/user.js`
+
+脚本顺带把源文件统一成 CRLF，并逐文件比对 md5。
+⚠️ 2026-09-28 从「手写文件清单」改成**整目录 walk** —— 手写清单漏过文件（`ruoyi/vue/.../profile/index.vue` 曾漏同步，拷回会让个人中心 404 复发），整目录 walk 不会再漏。
 
 ### 6.3 换行符
 

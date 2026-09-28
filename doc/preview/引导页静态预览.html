@@ -1,0 +1,452 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>面立方 · 新手引导（静态预览）</title>
+<style>
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    padding: 24px 16px 48px;
+    background: #f5f7fa;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", sans-serif;
+    color: #303133;
+  }
+  .notice {
+    max-width: 880px;
+    margin: 0 auto 16px;
+    padding: 10px 14px;
+    border: 1px solid #fde2e2;
+    border-left: 4px solid #f56c6c;
+    border-radius: 6px;
+    background: #fef0f0;
+    font-size: 13px;
+    line-height: 1.7;
+    color: #b34747;
+  }
+  .notice b { color: #c0392b; }
+  .shell {
+    max-width: 880px;
+    margin: 0 auto;
+    padding: 20px 28px 24px;
+    background: #fff;
+    border-radius: 10px;
+    box-shadow: 0 2px 12px rgba(0, 0, 0, .06);
+  }
+
+  /* 顶部 */
+  .top { display: flex; align-items: center; justify-content: space-between; }
+  .brand { display: flex; align-items: center; gap: 8px; }
+  .brand-icon {
+    width: 22px; height: 22px; border-radius: 50%;
+    background: #409eff; color: #fff;
+    font-size: 13px; line-height: 22px; text-align: center;
+  }
+  .brand-name { font-size: 17px; font-weight: 600; }
+  .tag {
+    display: inline-block; padding: 1px 7px; border-radius: 4px;
+    font-size: 12px; line-height: 18px;
+    border: 1px solid #d3d4d6; background: #f4f4f5; color: #909399;
+  }
+  .tag.success { border-color: #c2e7b0; background: #f0f9eb; color: #67c23a; }
+  .tag.primary { border-color: #b3d8ff; background: #ecf5ff; color: #409eff; }
+  .link-btn {
+    border: none; background: none; cursor: pointer;
+    font-size: 14px; color: #409eff; padding: 4px 8px;
+  }
+  .link-btn:hover { color: #66b1ff; }
+
+  /* 步骤指示 */
+  .steps { display: flex; margin: 26px 0 8px; }
+  .step { flex: 1; text-align: center; position: relative; }
+  .step::after {
+    content: ""; position: absolute; top: 13px; left: 50%;
+    width: 100%; height: 2px; background: #e4e7ed;
+  }
+  .step:last-child::after { display: none; }
+  .step.done::after, .step.active::after { background: #409eff; }
+  .step .dot {
+    position: relative; z-index: 1;
+    width: 28px; height: 28px; margin: 0 auto;
+    border-radius: 50%; background: #fff; border: 2px solid #e4e7ed;
+    font-size: 13px; line-height: 24px; color: #909399;
+  }
+  .step.done .dot { border-color: #409eff; background: #409eff; color: #fff; }
+  .step.active .dot { border-color: #409eff; color: #409eff; font-weight: 600; }
+  .step .t { margin-top: 6px; font-size: 13px; color: #909399; }
+  .step.done .t, .step.active .t { color: #303133; font-weight: 600; }
+  .step .d { font-size: 12px; color: #c0c4cc; }
+
+  /* 内容区 */
+  .body { min-height: 320px; padding: 20px 4px 8px; }
+  .pane { display: none; }
+  .pane.on { display: block; }
+
+  /* ① 欢迎 */
+  .welcome { text-align: center; }
+  .welcome h1 { margin: 8px 0 6px; font-size: 22px; }
+  .welcome .sub { margin: 0 0 18px; font-size: 13px; color: #909399; }
+  .carousel { position: relative; height: 168px; }
+  .slide {
+    position: absolute; inset: 0; opacity: 0; transition: opacity .4s;
+    display: flex; flex-direction: column; align-items: center; justify-content: center;
+    padding: 0 32px; border-radius: 8px;
+    background: linear-gradient(135deg, #ecf5ff 0%, #f0f9eb 100%);
+  }
+  .slide.on { opacity: 1; }
+  .slide .ico { font-size: 30px; }
+  .slide h3 { margin: 10px 0 6px; font-size: 16px; }
+  .slide p { margin: 0; font-size: 13px; line-height: 1.6; color: #606266; }
+  .dots { display: flex; gap: 8px; justify-content: center; margin-top: 12px; }
+  .dots i {
+    width: 8px; height: 8px; border-radius: 50%;
+    background: #d3d4d6; cursor: pointer;
+  }
+  .dots i.on { background: #409eff; }
+
+  /* 表单 */
+  .form { max-width: 560px; margin: 0 auto; }
+  .alert {
+    margin-bottom: 18px; padding: 8px 12px; border-radius: 4px;
+    background: #ecf5ff; border-left: 4px solid #409eff;
+    font-size: 13px; line-height: 1.6; color: #409eff;
+  }
+  .row { display: flex; align-items: flex-start; margin-bottom: 18px; }
+  .row > label { width: 96px; flex-shrink: 0; font-size: 14px; line-height: 32px; color: #606266; text-align: right; padding-right: 12px; }
+  .row .ctl { flex: 1; min-width: 0; }
+  input[type=text], select {
+    width: 100%; height: 32px; padding: 0 11px;
+    border: 1px solid #dcdfe6; border-radius: 4px;
+    font-size: 14px; color: #606266; background: #fff; outline: none;
+  }
+  input[type=text]:focus, select:focus { border-color: #409eff; }
+  .quick { margin-top: 8px; line-height: 26px; }
+  .quick .lb { font-size: 12px; color: #909399; }
+  .chip {
+    display: inline-block; margin: 0 6px 4px 0; padding: 1px 8px;
+    border: 1px solid #d3d4d6; border-radius: 4px; background: #f4f4f5;
+    font-size: 12px; line-height: 20px; color: #909399; cursor: pointer;
+  }
+  .chip.on { border-color: #b3d8ff; background: #ecf5ff; color: #409eff; }
+  .radios { display: inline-flex; border-radius: 4px; overflow: hidden; }
+  .radios span {
+    padding: 7px 16px; border: 1px solid #dcdfe6; border-left: none;
+    font-size: 13px; color: #606266; background: #fff; cursor: pointer;
+  }
+  .radios span:first-child { border-left: 1px solid #dcdfe6; border-radius: 4px 0 0 4px; }
+  .radios span:last-child { border-radius: 0 4px 4px 0; }
+  .radios span.on { background: #409eff; border-color: #409eff; color: #fff; }
+  .upload {
+    border: 1px dashed #dcdfe6; border-radius: 6px; padding: 18px;
+    text-align: center; background: #fafafa; cursor: pointer;
+  }
+  .upload:hover { border-color: #409eff; }
+  .upload .big { font-size: 14px; color: #409eff; }
+  .upload .tip { margin-top: 6px; font-size: 12px; color: #909399; }
+  .hint { margin-left: 10px; font-size: 12px; color: #909399; }
+  .company-item {
+    display: block; width: 100%; margin-bottom: 10px; padding: 9px 14px;
+    border: 1px solid #dcdfe6; border-radius: 4px; background: #fff;
+    font-size: 14px; color: #606266; cursor: pointer; text-align: left;
+  }
+  .company-item:hover { border-color: #c6e2ff; }
+  .company-item.on { border-color: #409eff; background: #ecf5ff; color: #409eff; }
+
+  /* ⑤ 完成 */
+  .done { text-align: center; }
+  .done .ok { font-size: 54px; color: #67c23a; line-height: 1; }
+  .done h2 { margin: 12px 0 20px; font-size: 18px; }
+  table.sum { width: 100%; border-collapse: collapse; font-size: 13px; text-align: left; }
+  table.sum th, table.sum td { border: 1px solid #ebeef5; padding: 8px 12px; }
+  table.sum th { width: 110px; background: #fafafa; font-weight: 400; color: #606266; }
+  .divider {
+    display: flex; align-items: center; gap: 10px;
+    margin: 22px 0 14px; font-size: 13px; color: #909399;
+  }
+  .divider::after { content: ""; flex: 1; height: 1px; background: #ebeef5; }
+  .recos { display: flex; gap: 16px; flex-wrap: wrap; }
+  .reco {
+    flex: 1 1 260px; padding: 14px 16px; text-align: left;
+    border: 1px solid #ebeef5; border-radius: 8px;
+  }
+  .reco h4 { margin: 0 0 10px; font-size: 14px; }
+  .reco ul { margin: 0; padding: 0; list-style: none; }
+  .reco li {
+    display: flex; align-items: center; justify-content: space-between; gap: 10px;
+    padding: 6px 0; font-size: 13px; color: #606266;
+    border-bottom: 1px dashed #ebeef5; cursor: pointer;
+  }
+  .reco li:last-child { border-bottom: none; }
+  .reco li .q { flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .reco .empty { font-size: 13px; color: #909399; }
+
+  /* 底部 */
+  .bottom {
+    display: flex; align-items: center; justify-content: space-between;
+    padding-top: 16px; border-top: 1px solid #ebeef5;
+  }
+  .progress { font-size: 13px; color: #909399; }
+  .acts { display: flex; gap: 10px; }
+  button.btn {
+    padding: 8px 18px; border-radius: 4px; font-size: 14px;
+    border: 1px solid #dcdfe6; background: #fff; color: #606266; cursor: pointer;
+  }
+  button.btn:hover { border-color: #c6e2ff; color: #409eff; background: #ecf5ff; }
+  button.btn.primary { border-color: #409eff; background: #409eff; color: #fff; }
+  button.btn.primary:hover { border-color: #66b1ff; background: #66b1ff; color: #fff; }
+  button.btn:disabled { opacity: .5; cursor: not-allowed; }
+</style>
+</head>
+<body>
+
+<div class="notice">
+  <b>这是静态预览，不是真实页面。</b>它只是把 <code>RuoYi-Vue3/src/views/interview/guide/index.vue</code> 的 5 步界面按同样的视觉还原出来，方便你直接看到形态（下面的按钮都能点）。<br>
+  真实页面在 <code>/guide</code>：启动前后端后登录，若 <code>student_profile.guide_status != '1'</code>，进首页会自动进入引导；首页也会出现「开始引导」卡片。
+</div>
+
+<div class="shell">
+  <div class="top">
+    <div class="brand">
+      <span class="brand-icon">◎</span>
+      <span class="brand-name">面立方</span>
+      <span class="tag">新手引导</span>
+    </div>
+    <button class="link-btn" onclick="alert('真实页面里：写入本机标记 interview_guide_dismissed，返回首页，不改数据库。')">跳过引导</button>
+  </div>
+
+  <div class="steps" id="steps"></div>
+
+  <div class="body">
+    <!-- ① 欢迎引导 -->
+    <div class="pane on" data-pane="welcome">
+      <div class="welcome">
+        <h1>欢迎来到面立方 👋</h1>
+        <p class="sub">用 1 分钟完成引导，让 AI 更懂你的目标岗位。</p>
+        <div class="carousel" id="carousel">
+          <div class="slide on">
+            <div class="ico">🎯</div>
+            <h3>建立岗位画像</h3>
+            <p>选定行业、目标岗位与难度，AI 据此决定出题范围。</p>
+          </div>
+          <div class="slide">
+            <div class="ico">📄</div>
+            <h3>上传你的简历</h3>
+            <p>简历越具体，AI 的追问越贴近你的真实经历。</p>
+          </div>
+          <div class="slide">
+            <div class="ico">📈</div>
+            <h3>面试 + 复盘闭环</h3>
+            <p>每场面试都会生成复盘报告，短板一目了然。</p>
+          </div>
+        </div>
+        <div class="dots" id="dots"></div>
+      </div>
+    </div>
+
+    <!-- ② 岗位画像 -->
+    <div class="pane" data-pane="job">
+      <div class="form">
+        <div class="row">
+          <label>行业</label>
+          <div class="ctl">
+            <select id="industry">
+              <option value="">请选择行业</option>
+              <option value="1" selected>技术</option>
+              <option value="2">产品</option>
+              <option value="3">运营</option>
+              <option value="4">财务</option>
+              <option value="5">教师</option>
+            </select>
+          </div>
+        </div>
+        <div class="row">
+          <label>目标岗位</label>
+          <div class="ctl">
+            <input type="text" id="jobName" value="Java 后端开发" placeholder="如：Java 后端开发、产品经理">
+            <div class="quick">
+              <span class="lb">快速选择：</span>
+              <span class="chip on" data-job="Java 后端开发">Java 后端开发</span>
+              <span class="chip" data-job="前端开发">前端开发</span>
+              <span class="chip" data-job="产品经理">产品经理</span>
+              <span class="chip" data-job="数据分析">数据分析</span>
+              <span class="chip" data-job="测试开发">测试开发</span>
+            </div>
+          </div>
+        </div>
+        <div class="row">
+          <label>面试难度</label>
+          <div class="ctl">
+            <div class="radios" id="difficulty">
+              <span data-v="1">初级</span>
+              <span data-v="2" class="on">中级</span>
+              <span data-v="3">高级</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ③ 简历上传 -->
+    <div class="pane" data-pane="resume">
+      <div class="form">
+        <div class="alert">上传一份简历，AI 会围绕你的真实经历生成更有针对性的问题。</div>
+        <div class="row">
+          <label>简历名称</label>
+          <div class="ctl"><input type="text" id="resumeName" value="Java后端开发-校招版" placeholder="不填则自动取文件名"></div>
+        </div>
+        <div class="row">
+          <label>简历文件</label>
+          <div class="ctl">
+            <div class="upload" onclick="alert('真实页面里：调用若依 /common/upload，v-model 回传相对地址。')">
+              <div class="big">选取文件</div>
+              <div class="tip">请上传大小不超过 10MB，格式为 pdf/doc/docx 的文件</div>
+            </div>
+          </div>
+        </div>
+        <div class="row">
+          <label>解析状态</label>
+          <div class="ctl">
+            <span class="tag success" id="parseTag">文件已上传，等待系统解析</span>
+            <span class="hint">简历解析能力将在后续版本开放，当前仅保存文件，可先跳过。</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ④ 目标企业 -->
+    <div class="pane" data-pane="company">
+      <div class="form">
+        <div class="alert">选择你倾向的企业类型，AI 会据此调整问题的考察侧重点。</div>
+        <div id="company">
+          <button class="company-item" data-v="1">BAT</button>
+          <button class="company-item on" data-v="2">央企</button>
+          <button class="company-item" data-v="3">外企</button>
+          <button class="company-item" data-v="4">其他</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- ⑤ 引导完成 -->
+    <div class="pane" data-pane="done">
+      <div class="done">
+        <div class="ok">✓</div>
+        <h2>引导完成，开始你的第一场模拟面试吧</h2>
+        <table class="sum">
+          <tr><th>行业</th><td>技术</td><th>目标岗位</th><td id="sJob">Java 后端开发</td></tr>
+          <tr><th>面试难度</th><td id="sDiff">中级</td><th>目标企业</th><td id="sComp">央企</td></tr>
+          <tr><th>简历</th><td colspan="3" id="sResume">Java后端开发-校招版</td></tr>
+        </table>
+
+        <div class="divider">引导后推荐</div>
+
+        <div class="recos">
+          <div class="reco">
+            <h4>💼 推荐岗位</h4>
+            <div class="quick" style="margin-top:0">
+              <span class="chip on">Java 后端开发</span>
+              <span class="chip on">服务端开发</span>
+              <span class="chip on">后端工程师</span>
+            </div>
+          </div>
+          <div class="reco">
+            <h4>📝 推荐练习</h4>
+            <ul>
+              <li><span class="q">说说 Java 里 HashMap 的扩容机制</span><span class="tag">中级</span></li>
+              <li><span class="q">Spring 是如何解决循环依赖的？</span><span class="tag">中级</span></li>
+              <li><span class="q">介绍一下你做过的最有挑战的项目</span><span class="tag">中级</span></li>
+            </ul>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="bottom">
+    <span class="progress" id="progress">第 1 / 5 步</span>
+    <div class="acts">
+      <button class="btn" id="prev" onclick="go(-1)" disabled>返回上一步</button>
+      <button class="btn primary" id="next" onclick="go(1)">下一步</button>
+    </div>
+  </div>
+</div>
+
+<script>
+const STEPS = [
+  ['欢迎引导', '认识面立方'],
+  ['岗位画像', '行业 / 岗位 / 难度'],
+  ['简历上传', '导入简历文件'],
+  ['目标企业', '选择企业类型'],
+  ['引导完成', '进入首页']
+];
+const KEYS = ['welcome', 'job', 'resume', 'company', 'done'];
+let idx = 0;
+
+// 步骤指示
+document.getElementById('steps').innerHTML = STEPS.map(([t, d], i) =>
+  `<div class="step" data-i="${i}"><div class="dot">${i + 1}</div><div class="t">${t}</div><div class="d">${d}</div></div>`
+).join('');
+
+function render() {
+  document.querySelectorAll('#steps .step').forEach((el, i) => {
+    el.classList.toggle('done', i < idx);
+    el.classList.toggle('active', i === idx);
+  });
+  document.querySelectorAll('.pane').forEach(p => {
+    p.classList.toggle('on', p.dataset.pane === KEYS[idx]);
+  });
+  document.getElementById('progress').textContent = `第 ${idx + 1} / ${STEPS.length} 步`;
+  document.getElementById('prev').disabled = idx === 0;
+  const nx = document.getElementById('next');
+  nx.textContent = idx === STEPS.length - 1 ? '完成引导，进入首页' : '下一步';
+}
+
+function go(delta) {
+  if (idx === STEPS.length - 1 && delta > 0) {
+    alert('真实页面里：把 student_profile.guide_status 置为 1（finishGuide），然后 router.push("/index")。');
+    return;
+  }
+  const n = idx + delta;
+  if (n < 0 || n > STEPS.length - 1) return;
+  idx = n;
+  render();
+}
+
+// 轮播
+let ci = 0;
+const slides = document.querySelectorAll('#carousel .slide');
+document.getElementById('dots').innerHTML = [...slides].map((_, i) => `<i data-i="${i}" class="${i === 0 ? 'on' : ''}"></i>`).join('');
+function showSlide(n) {
+  ci = (n + slides.length) % slides.length;
+  slides.forEach((s, i) => s.classList.toggle('on', i === ci));
+  document.querySelectorAll('#dots i').forEach((d, i) => d.classList.toggle('on', i === ci));
+}
+document.querySelectorAll('#dots i').forEach(d => d.onclick = () => showSlide(+d.dataset.i));
+setInterval(() => showSlide(ci + 1), 4500);
+
+// 交互：岗位快捷标签
+document.querySelectorAll('.chip[data-job]').forEach(c => c.onclick = () => {
+  document.querySelectorAll('.chip[data-job]').forEach(x => x.classList.remove('on'));
+  c.classList.add('on');
+  document.getElementById('jobName').value = c.dataset.job;
+  document.getElementById('sJob').textContent = c.dataset.job;
+});
+
+// 交互：难度
+document.querySelectorAll('#difficulty span').forEach(s => s.onclick = () => {
+  document.querySelectorAll('#difficulty span').forEach(x => x.classList.remove('on'));
+  s.classList.add('on');
+  document.getElementById('sDiff').textContent = s.textContent;
+});
+
+// 交互：企业类型
+document.querySelectorAll('#company .company-item').forEach(b => b.onclick = () => {
+  document.querySelectorAll('#company .company-item').forEach(x => x.classList.remove('on'));
+  b.classList.add('on');
+  document.getElementById('sComp').textContent = b.textContent;
+});
+
+render();
+</script>
+</body>
+</html>

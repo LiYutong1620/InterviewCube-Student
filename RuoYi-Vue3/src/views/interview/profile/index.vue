@@ -145,7 +145,7 @@
   </div>
 </template>
 
-<script setup name="Profile">
+<script setup name="StudentProfile">
 import { listProfile, addProfile, updateProfile } from "@/api/interview/profile"
 
 const { proxy } = getCurrentInstance()

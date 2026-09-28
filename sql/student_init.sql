@@ -1,12 +1,13 @@
 -- ============================================================
 -- 学生端 · 一键重建脚本（student_init.sql）
 -- ------------------------------------------------------------
--- 【作用】把「从零重建学生端」要跑的 5 个脚本合并成一个文件，跑完就有：
+-- 【作用】把「从零重建学生端」要跑的 6 个脚本合并成一个文件，跑完就有：
 --   ① 8 张业务表（DROP + CREATE）
---   ② 学生端 50 条菜单（1 目录 + 8 模块菜单 + 40 按钮）+ interview:data:all 权限点
+--   ② 学生端 50 条菜单（1 目录 + 7 模块菜单 + 41 按钮）+ interview:data:all 权限点
 --   ③ 「学生」角色 + student01 / student02 账号 + 角色菜单绑定
 --   ④ 13 个业务字典类型 + 45 条字典数据
 --   ⑤ 26 道题库演示题（可选，不需要就把第 5 节整段注释掉）
+--   ⑥ 运行时配置：打开 sys.account.registerUser（手机号验证码注册要用）
 --
 -- 【前置】必须先跑 RuoYi-Vue/sql/ry_20260417.sql + RuoYi-Vue/sql/quartz.sql
 --         （若依基础库，建 sys_* / gen_* / qrtz_*）
@@ -14,17 +15,19 @@
 -- ⚠️ 【危险】第 1 节是 DROP TABLE + CREATE —— 会**清空这 8 张业务表**！
 --    只想在已有数据的库上补东西，不要跑本文件；用 sql/student_patch.sql。
 --
--- 【幂等】第 2 ~ 5 节幂等，可重复执行；第 1 节不是（会重建表）。
--- 【顺序】文件内已排好：建表 → 菜单 → 角色账号 → 字典 → 演示数据。
+-- 【幂等】第 2 ~ 6 节幂等，可重复执行；第 1 节不是（会重建表）。
+-- 【顺序】文件内已排好：建表 → 菜单 → 角色账号 → 字典 → 演示数据 → 运行时配置。
 --         各节自带校验查询；文件末尾另有一份「总校验」。
--- 【原始文件】sql/ 下 5 个源文件保留未删，各自头部有 banner 指向本文件。
--- 【旧库补丁】已建过库的、只想同步列注释或清理重复角色 → sql/student_patch.sql
--- 维护人：tong　最后更新：2026-09-22
+-- 【原始文件】sql/ 下 10 个源文件保留未删，各自头部有 banner 指向本文件。
+-- 【旧库补丁】已建过库的、只想同步列注释 / 清理重复角色 / 修路由名 / 开注册
+--             / 把「面试问答」菜单并入「面试环节」
+--             → sql/student_patch.sql
+-- 维护人：tong　最后更新：2026-09-28
 -- ============================================================
 
 
 -- ##########################################################################
--- ## 第 1 节 / 共 5 节　建表：8 张业务表
+-- ## 第 1 节 / 共 6 节　建表：8 张业务表
 -- ## 来源：原 sql/student.sql（已并入本文件，原文件保留留档）
 -- ## ⚠️ 本节含 DROP TABLE IF EXISTS —— 会清空这 8 张表！只用于从零重建。
 -- ## 非幂等；前置：RuoYi-Vue/sql/ry_20260417.sql
@@ -295,33 +298,44 @@ SET FOREIGN_KEY_CHECKS = 1;
 
 
 -- ##########################################################################
--- ## 第 2 节 / 共 5 节　菜单：50 条（8 个模块 + 数据权限点）
+-- ## 第 2 节 / 共 6 节　菜单：50 条（7 个模块菜单 + 41 按钮 + 数据权限点）
 -- ## 来源：原 sql/student_menu.sql（已并入本文件，原文件保留留档）
 -- ## 幂等：是；前置：若依基础库的 sys_menu（不依赖第 1 节）
+-- ## 2026-09-28：「面试问答」并入「面试环节」，qa 不再有独立模块菜单（8 → 7）；
+-- ## 其 6 个 interview:qa:* 按钮全部改挂到「模拟面试场次」下，本节末尾还会清掉旧库遗留的
+-- ## 那条 C 型菜单、并把 :list 补成 F 型按钮（删 C 菜单会连 :list 一起删 → 后端 403）。
 -- ##########################################################################
 
 -- ============================================================
--- 菜单 SQL —— 学生端 · 全量菜单（8 个模块 + 数据权限点）
+-- 菜单 SQL —— 学生端 · 全量菜单（模块菜单 + 按钮 + 数据权限点）
 -- ------------------------------------------------------------
--- 【这是什么】把 ruoyi/ 下 9 个菜单脚本合并成的一个文件：
+-- 【这是什么】把 ruoyi/ 下的菜单脚本合并成的一个文件：
 --   profileMenu / resumeMenu / jobprofileMenu / sessionMenu /
 --   questionMenu / qaMenu / reportMenu / bankMenu / dataScopePermiMenu
---   合并后共 50 条：1 个「学生端」目录（M）+ 8 个模块菜单（C）+ 40 个按钮（F）
+--   合并后共 50 条：1 个「学生端」目录（M）+ 7 个模块菜单（C）+ 41 个按钮（F）
 --                  + 1 条 interview:data:all 权限点（不给「学生」角色）
+-- 【2026-09-28】「面试问答」并入「面试环节」：不再有独立的 qa 模块菜单（8 → 7），
+--   它的 6 个 interview:qa:* 按钮全部改挂到「模拟面试场次」模块菜单下。
+--   ⚠️ 是 6 个不是 5 个：:list 本来挂在 C 型模块菜单上，删菜单会连它一起删 → 后端 403，
+--      所以把它降级成 F 型按钮。权限点总数守恒（8 模块 × 6 = 48 个）。
+--   原因：后端 InterviewQaController 六个接口都带 @PreAuthorize，权限点不能删；
+--   按钮是 F 型不进侧边栏，挂哪儿对用户不可见，只影响「角色管理」的权限勾选树。
 -- 【为什么合并】三端合并时只需收集 / 重放这一个文件，不必逐个找 9 个。
 -- 【幂等】是 —— 每条 insert 都带 where not exists 守卫，可重复执行；
 --   模块菜单与按钮的父子关系按 perms 反查，不依赖 LAST_INSERT_ID()。
+--   末尾「迁移」节会顺手清掉旧库遗留的 C 型「面试问答」菜单、并补回 :list，所以重放也能收敛。
 -- 【前置】RuoYi-Vue/sql/ry_20260417.sql（基础库，建 sys_menu）
 -- 【后置】sql/student_role_user.sql（学生角色绑定，依赖本文件建好的菜单）
--- 【校验】文件末尾自带查询：student_menu_cnt 应为 49，data_all_cnt 应为 1
+-- 【校验】文件末尾自带查询：student_menu_cnt 应为 49，data_all_cnt 应为 1，
+--   legacy_qa_menu_cnt 应为 0，qa_permi_cnt 应为 6
 -- 【原始文件】ruoyi/*Menu.sql 保留未删（代码生成器产出留档），文件头有 banner 指向本文件。
--- 【顺序】8 个模块之间先后无所谓；每个模块前都重新 set @parentId，
---   保证按钮挂在各自的模块菜单下。
--- 维护人：tong　最后更新：2026-09-22
+-- 【顺序】模块之间先后无所谓；每个模块前都重新 set @parentId，
+--   保证按钮挂在各自的模块菜单下。⚠️ 迁移节必须在 session 模块之后。
+-- 维护人：tong　最后更新：2026-09-28
 -- ============================================================
 
 -- ============================================================
--- 0. 「学生端」目录（M 型）—— 只建一次，下面 8 个模块都挂在它下面
+-- 0. 「学生端」目录（M 型）—— 只建一次，下面各模块都挂在它下面
 -- ============================================================
 
 insert into sys_menu (menu_name, parent_id, order_num, path, component, is_frame, is_cache, menu_type, visible, status, perms, icon, create_by, create_time, update_by, update_time, remark)
@@ -547,47 +561,49 @@ where @parentId is not null
   and not exists (select 1 from sys_menu where perms = 'interview:question:export');
 
 -- ============================================================
--- 6 / 8　面试问答　interview:qa:*
+-- 6 / 8　面试问答（并入面试环节）　interview:qa:*
 -- ============================================================
 
-insert into sys_menu (menu_name, parent_id, order_num, path, component, is_frame, is_cache, menu_type, visible, status, perms, icon, create_by, create_time, update_by, update_time, remark)
-select '面试问答', @studentDirId, '1', 'qa', 'interview/qa/index', 1, 0, 'C', '0', '0', 'interview:qa:list', '#', 'admin', sysdate(), '', null, '面试问答菜单'
-from dual
-where @studentDirId is not null
-  and not exists (select 1 from sys_menu where perms = 'interview:qa:list');
-
--- 取本模块菜单 ID —— 按权限标识反查（不用 LAST_INSERT_ID()，菜单已存在时同样取得到）
-set @parentId = (select menu_id from sys_menu where perms = 'interview:qa:list' limit 1);
+-- ⚠️ 本模块没有自己的模块菜单（已并入「面试环节」），下面 6 个按钮
+--    直接挂在「模拟面试场次」的模块菜单下；权限点一个不少（含 :list）。
+--    取挂靠父菜单 ID —— 同样按权限标识反查。
+set @parentId = (select menu_id from sys_menu where perms = 'interview:session:list' limit 1);
 
 insert into sys_menu (menu_name, parent_id, order_num, path, component, is_frame, is_cache, menu_type, visible, status, perms, icon, create_by, create_time, update_by, update_time, remark)
-select '面试问答查询', @parentId, '1', '#', '', 1, 0, 'F', '0', '0', 'interview:qa:query', '#', 'admin', sysdate(), '', null, ''
+select '面试问答查询', @parentId, '6', '#', '', 1, 0, 'F', '0', '0', 'interview:qa:query', '#', 'admin', sysdate(), '', null, ''
 from dual
 where @parentId is not null
   and not exists (select 1 from sys_menu where perms = 'interview:qa:query');
 
 insert into sys_menu (menu_name, parent_id, order_num, path, component, is_frame, is_cache, menu_type, visible, status, perms, icon, create_by, create_time, update_by, update_time, remark)
-select '面试问答新增', @parentId, '2', '#', '', 1, 0, 'F', '0', '0', 'interview:qa:add', '#', 'admin', sysdate(), '', null, ''
+select '面试问答新增', @parentId, '7', '#', '', 1, 0, 'F', '0', '0', 'interview:qa:add', '#', 'admin', sysdate(), '', null, ''
 from dual
 where @parentId is not null
   and not exists (select 1 from sys_menu where perms = 'interview:qa:add');
 
 insert into sys_menu (menu_name, parent_id, order_num, path, component, is_frame, is_cache, menu_type, visible, status, perms, icon, create_by, create_time, update_by, update_time, remark)
-select '面试问答修改', @parentId, '3', '#', '', 1, 0, 'F', '0', '0', 'interview:qa:edit', '#', 'admin', sysdate(), '', null, ''
+select '面试问答修改', @parentId, '8', '#', '', 1, 0, 'F', '0', '0', 'interview:qa:edit', '#', 'admin', sysdate(), '', null, ''
 from dual
 where @parentId is not null
   and not exists (select 1 from sys_menu where perms = 'interview:qa:edit');
 
 insert into sys_menu (menu_name, parent_id, order_num, path, component, is_frame, is_cache, menu_type, visible, status, perms, icon, create_by, create_time, update_by, update_time, remark)
-select '面试问答删除', @parentId, '4', '#', '', 1, 0, 'F', '0', '0', 'interview:qa:remove', '#', 'admin', sysdate(), '', null, ''
+select '面试问答删除', @parentId, '9', '#', '', 1, 0, 'F', '0', '0', 'interview:qa:remove', '#', 'admin', sysdate(), '', null, ''
 from dual
 where @parentId is not null
   and not exists (select 1 from sys_menu where perms = 'interview:qa:remove');
 
 insert into sys_menu (menu_name, parent_id, order_num, path, component, is_frame, is_cache, menu_type, visible, status, perms, icon, create_by, create_time, update_by, update_time, remark)
-select '面试问答导出', @parentId, '5', '#', '', 1, 0, 'F', '0', '0', 'interview:qa:export', '#', 'admin', sysdate(), '', null, ''
+select '面试问答导出', @parentId, '10', '#', '', 1, 0, 'F', '0', '0', 'interview:qa:export', '#', 'admin', sysdate(), '', null, ''
 from dual
 where @parentId is not null
   and not exists (select 1 from sys_menu where perms = 'interview:qa:export');
+
+insert into sys_menu (menu_name, parent_id, order_num, path, component, is_frame, is_cache, menu_type, visible, status, perms, icon, create_by, create_time, update_by, update_time, remark)
+select '面试问答列表', @parentId, '11', '#', '', 1, 0, 'F', '0', '0', 'interview:qa:list', '#', 'admin', sysdate(), '', null, ''
+from dual
+where @parentId is not null
+  and not exists (select 1 from sys_menu where perms = 'interview:qa:list');
 
 -- ============================================================
 -- 7 / 8　面试复盘报告　interview:report:*
@@ -676,6 +692,132 @@ where @parentId is not null
   and not exists (select 1 from sys_menu where perms = 'interview:bank:export');
 
 -- ============================================================
+-- 迁移：清掉旧库遗留的 C 型「面试问答」菜单 + 补回 interview:qa:list（2026-09-28）
+-- ------------------------------------------------------------
+-- 新库不会走到这里（上面 qaMenu 那段已经不插 C 菜单，且直接插了 6 个按钮）；
+-- 已建过的库重放本文件时，靠这一段收敛到「7 个模块菜单 + 6 个 qa 按钮」。
+-- ⚠️ 其中「重建 :list 并补绑角色」是 2026-09-28 回归修复的关键，别删。
+-- 来源：sql/student_qa_merge_menu.sql（同一个文件也是 sql/student_patch.sql 的一节）
+-- ============================================================
+
+-- ============================================================
+-- 【学生端 · 迁移】「面试问答」并入「面试环节」（2026-09-28）
+-- ------------------------------------------------------------
+-- 【背景】前端 views/interview/qa/index.vue 已并入 views/interview/session/index.vue：
+--   · /student/qa 路由消失（菜单没了 → 动态路由不再生成）
+--   · 作答 / 回顾界面改挂在 /student/session?sessionId=x 下
+--   · 所以「面试问答」不再需要自己的侧边栏菜单
+--
+-- 【但 6 个权限点必须一个不少】后端 InterviewQaController 的
+--   list / query / add / edit / remove / export 六个接口都带 @PreAuthorize('interview:qa:xxx')，
+--   合并后的作答页仍要调 listQa / submitQa —— 删掉权限点，学生立刻 403。
+--
+--   ⚠️ 2026-09-28 的一次回归（本文件已修）：每个模块的 6 个权限点里，`:list` 平时挂在
+--     **C 型模块菜单**上，另外 5 个挂在 F 型按钮上。第一版迁移只搬了 5 个按钮、
+--     然后删掉 C 菜单 —— 于是 `interview:qa:list` 跟着没了，student01 一进
+--     /student/session?sessionId=x 就弹「当前操作没有权限」（GET /interview/qa/list 403）。
+--     修法：第 5 步把 :list **降级成一条 F 型按钮**，与另外 5 个并列挂到
+--     「模拟面试场次」下，并补回角色绑定。权限点总数因此守恒（8 模块 × 6 = 48）。
+--
+-- 【新库不需要本文件】ruoyi/qaMenu.sql 已经直接把这 6 个按钮插到「面试环节」下了。
+--   本文件只服务于「已建过库、不想重建」的场景。
+--
+-- 【前置】ruoyi/sessionMenu.sql（或 sql/student_init.sql 第 2 节）已跑过
+-- 【幂等】是 —— 可重复执行；第 3 步带 order_num <= 5 守卫，重跑不会反复加 5；
+--        第 5 步带 not exists 判据 + insert ignore，重跑不会重复插/重复绑
+-- 【校验】文件末尾自带查询：应返回 6 行 F 型按钮，且 0 行 C 型「面试问答」菜单
+-- 【详见】sql/README.md
+-- ============================================================
+
+set names utf8mb4;
+
+-- ------------------------------------------------------------
+-- 1. 取「模拟面试场次」模块菜单 ID
+-- ------------------------------------------------------------
+set @sessionMenuId = (select menu_id from sys_menu where perms = 'interview:session:list' limit 1);
+
+-- ------------------------------------------------------------
+-- 2. 把「面试问答」的按钮改挂到「模拟面试场次」下
+--    ⚠️ 用会话变量而不是子查询 —— MySQL 不允许 update 的目标表出现在子查询里（错误 1093）
+--    ⚠️ 只搬 F 型：旧库里 :list 是 C 型（第 4 步要删掉它）；重跑时它已是 F 型，照样能取到
+-- ------------------------------------------------------------
+update sys_menu
+set parent_id = @sessionMenuId
+where perms like 'interview:qa:%'
+  and menu_type = 'F'
+  and @sessionMenuId is not null;
+
+-- ------------------------------------------------------------
+-- 3. 按钮序号从 6 起，避免与「模拟面试场次」自己的 5 个按钮（1~5）重号
+--    order_num <= 5 是幂等守卫：第一次把 1~5 抬成 6~10，重跑时已全部 > 5，不再动
+-- ------------------------------------------------------------
+update sys_menu
+set order_num = order_num + 5
+where perms like 'interview:qa:%'
+  and menu_type = 'F'
+  and order_num <= 5;
+
+-- ------------------------------------------------------------
+-- 4. 解绑角色 → 菜单的关系，再删掉「面试问答」那条 C 型模块菜单
+--    ⚠️ 必须限定 menu_type = 'C'：否则第 5 步补的 F 型 :list 会被这条一起删掉
+--       （第一版就是漏了这个限定，才把权限点删没的；重跑时更危险）
+--    5 个按钮本身不动（menu_id 不变，角色绑定继续有效）
+-- ------------------------------------------------------------
+delete from sys_role_menu
+where menu_id in (select menu_id from sys_menu where perms = 'interview:qa:list' and menu_type = 'C');
+
+delete from sys_menu where perms = 'interview:qa:list' and menu_type = 'C';
+
+-- ------------------------------------------------------------
+-- 5. ⚠️ 关键一步（2026-09-28 回归修复）：把 interview:qa:list 补回来
+--    · 降级成 F 型按钮，挂在「模拟面试场次」下（和另外 5 个并列）
+--    · order_num = 11（6 ~ 10 已被另外 5 个按钮占用）
+--    · 同步补回「学生」角色的绑定 —— 第 4 步把旧绑定删掉了，
+--      而 student_role_user.sql 不会自动重跑，所以这里必须自己绑
+-- ------------------------------------------------------------
+insert into sys_menu (menu_name, parent_id, order_num, path, component, is_frame, is_cache, menu_type, visible, status, perms, icon, create_by, create_time, update_by, update_time, remark)
+select '面试问答列表', @sessionMenuId, '11', '#', '', 1, 0, 'F', '0', '0', 'interview:qa:list', '#', 'admin', sysdate(), '', null, '2026-09-28 由 C 型模块菜单降级为按钮（权限点守恒）'
+from dual
+where @sessionMenuId is not null
+  and not exists (select 1 from sys_menu where perms = 'interview:qa:list');
+
+-- 绑给「学生」角色（可能有多条同 role_key 的记录，cross join 一次绑全；insert ignore 保证幂等）
+insert ignore into sys_role_menu (role_id, menu_id)
+select r.role_id, m.menu_id
+from sys_role r
+cross join sys_menu m
+where r.role_key = 'student'
+  and r.del_flag = '0'
+  and m.perms = 'interview:qa:list';
+
+-- ------------------------------------------------------------
+-- 6. 校验：应 6 行，全部 F 型，parent_id 指向「模拟面试场次」
+-- ------------------------------------------------------------
+select m.menu_id, m.menu_name, m.menu_type, m.parent_id, m.order_num, m.perms
+from sys_menu m
+where m.perms like 'interview:qa:%'
+order by m.order_num, m.menu_id;
+
+-- ------------------------------------------------------------
+-- 7. 校验：应 0 行（旧的 C 型「面试问答」菜单已删干净）
+-- ------------------------------------------------------------
+select menu_id, menu_name, menu_type, perms
+from sys_menu
+where perms = 'interview:qa:list' and menu_type = 'C';
+
+-- ------------------------------------------------------------
+-- 8. 校验：学生角色手上的 interview:qa:* 权限应 6 个（含 list）
+-- ------------------------------------------------------------
+select m.perms
+from sys_role r
+join sys_role_menu rm on rm.role_id = r.role_id
+join sys_menu m on m.menu_id = rm.menu_id
+where r.role_key = 'student' and r.del_flag = '0'
+  and m.perms like 'interview:qa:%'
+order by m.perms;
+
+
+-- ============================================================
 -- 9 / 9　数据隔离权限点　interview:data:all
 -- ------------------------------------------------------------
 -- 用途：注册为可分配的权限按钮，供后台端在「角色管理」里授予非超管角色。
@@ -698,7 +840,7 @@ where not exists (select 1 from sys_menu where perms = 'interview:data:all');
 -- 校验
 -- ============================================================
 
--- 校验 1：学生端菜单树（目录 + 8 模块菜单 + 40 按钮），预期 49
+-- 校验 1：学生端菜单树（目录 + 7 模块菜单 + 41 按钮），预期 49
 --   注意：按钮是模块菜单的子节点（孙节点），所以要查三层。
 --   data:all 被排除 —— 它不属于学生端菜单树（无论挂在目录下还是根节点）。
 select count(*) as student_menu_cnt
@@ -713,7 +855,19 @@ select count(*) as data_all_cnt
 from sys_menu
 where perms = 'interview:data:all';
 
--- 校验 3：逐条列出学生端菜单树，便于肉眼核对（预期 49 行）
+-- 校验 3：确认已无 C 型「面试问答」模块菜单，预期 0
+--   ⚠️ 必须带 menu_type = 'C' —— 修复后 :list 本身是一条 F 型按钮，不带限定会数成 1。
+select count(*) as legacy_qa_menu_cnt
+from sys_menu
+where perms = 'interview:qa:list'
+  and menu_type = 'C';
+
+-- 校验 4：interview:qa:* 权限点一个不少，预期 6（全部 F 型，挂在「模拟面试场次」下，含 :list）
+select count(*) as qa_permi_cnt
+from sys_menu
+where perms like 'interview:qa:%%';
+
+-- 校验 5：逐条列出学生端菜单树，便于肉眼核对（预期 49 行）
 select menu_id, menu_name, menu_type, parent_id, order_num, perms
 from sys_menu
 where (menu_id = @studentDirId
@@ -724,7 +878,7 @@ order by menu_type desc, parent_id, order_num, menu_id;
 
 
 -- ##########################################################################
--- ## 第 3 节 / 共 5 节　角色与账号：「学生」角色 + student01 / student02 + 菜单绑定
+-- ## 第 3 节 / 共 6 节　角色与账号：「学生」角色 + student01 / student02 + 菜单绑定
 -- ## 来源：原 sql/student_role_user.sql（已并入本文件，原文件保留留档）
 -- ## 幂等：是；⚠️ 必须在第 2 节之后 —— 它依赖菜单已经建好
 -- ##########################################################################
@@ -794,8 +948,15 @@ select @student02Id, @studentRoleId from dual where @student02Id is not null and
 --
 --    菜单树形状（合计 49 条）：
 --      学生端目录                       1 条   path='student', menu_type='M'
---        +-- 8 个模块菜单               8 条   每个模块的 interview:xxx:list 挂在这里
---              +-- 每个模块 5 个按钮   40 条   query / add / edit / remove / export
+--        +-- 7 个模块菜单               7 条   每个模块的 interview:xxx:list 挂在这里
+--              +-- 每个模块 5 个按钮   35 条   query / add / edit / remove / export
+--              +-- 「面试环节」下另有   6 条   qa 的 6 个按钮（含降级来的 interview:qa:list）
+--
+--    ⚠️ 2026-09-28：「面试问答」并入「面试环节」，不再有独立的 qa 模块菜单（8 → 7）。
+--       它的 6 个 interview:qa:* 按钮改挂到「模拟面试场次」模块菜单下 ——
+--       仍在第二层，下面 4.3 的绑定照样能取到，学生权限一个不少。
+--       ⚠️ 其中 :list 是从 C 型模块菜单**降级**过来的 F 型按钮：删 C 菜单会连它一起删，
+--          而后端 InterviewQaController.list 正用着它 → 不补回来学生立刻 403。
 --
 --    注意：必须排除 interview:data:all —— 它同样挂在「学生端」目录下，
 --    但那是给后台端的「全量数据权限」，学生拿到就能看所有学生的数据
@@ -806,14 +967,15 @@ set @studentDirId = (select menu_id from sys_menu where path = 'student' and men
 insert ignore into sys_role_menu (role_id, menu_id)
 select @studentRoleId, @studentDirId from dual where @studentRoleId is not null and @studentDirId is not null;
 
--- 4.2 目录下的一级菜单（8 个模块，含各自的 interview:xxx:list 权限）
+-- 4.2 目录下的一级菜单（7 个模块，含各自的 interview:xxx:list 权限）
+--     2026-09-28 起「面试问答」已并入「面试环节」，这里只有 7 条
 insert ignore into sys_role_menu (role_id, menu_id)
 select @studentRoleId, menu_id from sys_menu
 where parent_id = @studentDirId
   and @studentRoleId is not null
   and (perms is null or perms <> 'interview:data:all');
 
--- 4.3 再下一级（每个模块的 5 个按钮）
+-- 4.3 再下一级（每个模块的 5 个按钮 + 「面试环节」下 qa 的 6 个按钮）
 --     若以后菜单层级加深，这里需要再加一段；跑完第 5 步的校验能立刻发现
 insert ignore into sys_role_menu (role_id, menu_id)
 select @studentRoleId, menu_id from sys_menu
@@ -840,7 +1002,7 @@ where r.role_key = 'student' and m.perms = 'interview:data:all';
 
 
 -- ##########################################################################
--- ## 第 4 节 / 共 5 节　业务字典：13 个类型 + 45 条数据
+-- ## 第 4 节 / 共 6 节　业务字典：13 个类型 + 45 条数据
 -- ## 来源：原 sql/student_dict.sql（已并入本文件，原文件保留留档）
 -- ## 幂等：是；只依赖若依基础库的 sys_dict_type / sys_dict_data
 -- ##########################################################################
@@ -1184,7 +1346,7 @@ where dict_type in ('student_education', 'student_industry', 'student_difficulty
 
 
 -- ##########################################################################
--- ## 第 5 节 / 共 5 节　题库演示数据：26 道样例题（可选）
+-- ## 第 5 节 / 共 6 节　题库演示数据：26 道样例题（可选）
 -- ## 来源：原 sql/student_question_bank_seed.sql（已并入本文件，原文件保留留档）
 -- ## 幂等：是；依赖第 1 节的 question_bank 表。
 -- ## 不是重建必需步骤 —— 真实题库由后台端维护；跑它只是为了本地能验证列表 / 筛选 / 详情 / 导出。
@@ -1392,6 +1554,69 @@ select
 
 
 -- ##########################################################################
+-- ## 第 6 节 / 共 6 节　运行时配置：打开注册开关（sys_config）
+-- ## 来源：原 sql/student_auth_config.sql（已并入本文件，原文件保留留档）
+-- ## 幂等：是；只改 sys_config 里 sys.account.registerUser 这一行的值，不动表结构。
+-- ## ⚠️ 应用**正在运行**时跑本节，改了不生效 —— 必须重启后端，
+-- ##    或去「系统管理 → 参数设置」点一次「刷新缓存」（Redis 参数缓存无过期时间）。
+-- ##########################################################################
+
+-- ============================================================
+-- 学生端 · 运行时配置（sys_config）
+-- ------------------------------------------------------------
+-- 【作用】把学生端功能依赖的 sys_config 开关设成「开箱可用」的值。
+--
+-- 【背景】sys_config 的数据来自若依官方脚本 RuoYi-Vue/sql/ry_20260417.sql，
+--         官方默认 sys.account.registerUser = false（不开放注册）。
+--         学生端要做「手机号验证码注册」，所以必须打开。
+--         关着的话：前端登录页不显示「立即注册」入口，
+--         且 /interview/auth/register/phone 会直接返回「当前系统没有开启注册功能」。
+--
+-- 【幂等】是 —— UPDATE 重复执行结果一致，可安全重跑。
+-- 【不改表结构】只动一行数据的值，不写死 config_id（sys_config 主键自增）。
+--
+-- ⚠️ 【重要】直接跑 SQL 改 sys_config，**不会**自动刷新 Redis 里的参数缓存
+--    （若依缓存 key = sys_config:<config_key>，且**没有过期时间**）。
+--    所以：
+--      · 从零重建 / 重启过应用 → 无需额外操作
+--      · 应用**正在运行**时跑本文件 → 必须二选一：
+--          ① 重启后端；或
+--          ② 在「系统管理 → 参数设置」点一次「刷新缓存」
+--             （等价于 DELETE /system/config/refreshCache）
+--        否则改了也不生效，会以为脚本没起作用。
+--
+-- 详见：doc/学生端对外契约.md「认证扩展接口」一节
+-- 维护人：tong　创建日期：2026-09-28
+-- ============================================================
+
+
+-- ------------------------------------------------------------
+-- 1. 核查现状
+-- ------------------------------------------------------------
+select config_id, config_name, config_key, config_value, update_time
+from sys_config
+where config_key = 'sys.account.registerUser';
+
+
+-- ------------------------------------------------------------
+-- 2. 打开注册开关
+-- ------------------------------------------------------------
+update sys_config
+   set config_value = 'true',
+       update_by    = 'system',
+       update_time  = sysdate()
+ where config_key = 'sys.account.registerUser';
+
+
+-- ------------------------------------------------------------
+-- 3. 复核：期望恰好 1 行，config_value = 'true'
+-- ------------------------------------------------------------
+select config_id, config_name, config_key, config_value, update_time
+from sys_config
+where config_key = 'sys.account.registerUser';
+
+
+-- ##########################################################################
 -- ## 总校验 —— 跑完本文件后执行，核对是否都到位
 -- ##########################################################################
 
@@ -1403,7 +1628,7 @@ where table_schema = database()
                      'interview_session','interview_question','interview_qa',
                      'interview_report','question_bank');
 
--- ② 学生端菜单树（1 目录 + 8 模块菜单 + 40 按钮，不含 data:all）（预期 49）
+-- ② 学生端菜单树（1 目录 + 7 模块菜单 + 41 按钮，不含 data:all）（预期 49）
 select count(*) as menu_cnt
 from sys_menu
 where (menu_id = @studentDirId
@@ -1420,6 +1645,18 @@ select count(*) as role_menu_cnt
 from sys_role_menu rm
 join sys_role r on r.role_id = rm.role_id
 where r.role_key = 'student' and r.del_flag = '0';
+
+-- ④-1 已无 C 型「面试问答」模块菜单（预期 0）
+--      ⚠️ 必须带 menu_type = 'C' —— 修复后 :list 本身是一条 F 型按钮，不带限定会数成 1
+select count(*) as legacy_qa_menu_cnt
+from sys_menu
+where perms = 'interview:qa:list'
+  and menu_type = 'C';
+
+-- ④-2 interview:qa:* 权限点一个不少（预期 6，全部 F 型挂在「模拟面试场次」下，含 :list）
+select count(*) as qa_permi_cnt
+from sys_menu
+where perms like 'interview:qa:%';
 
 -- ⑤ interview:data:all 没有被误绑给「学生」角色（预期 0）
 select count(*) as data_all_bound
@@ -1445,3 +1682,9 @@ where dict_type in ('student_education','student_industry','student_difficulty',
 
 -- ⑦ 题库演示题（第 5 节没跑的话是 0，不影响功能）
 select count(*) as bank_cnt from question_bank;
+
+-- ⑧ 注册开关已打开（预期 1 行，config_value = 'true'）
+--    注意：本节是直接改库，应用正在运行时还要重启或刷新参数缓存才生效
+select count(*) as register_enabled_cnt
+from sys_config
+where config_key = 'sys.account.registerUser' and config_value = 'true';

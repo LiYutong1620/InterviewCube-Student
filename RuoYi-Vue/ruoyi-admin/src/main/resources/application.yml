@@ -13,6 +13,28 @@ ruoyi:
   # 验证码类型 math 数字计算 char 字符验证
   captchaType: math
 
+# 学生端认证扩展配置
+interview:
+  # 短信验证码通道
+  sms:
+    # 通道：mock   = 开发期本地通道（验证码只写 Redis + 打日志，不真发短信）
+    #       aliyun = 阿里云短信（见 AliyunSmsSender，尚未接入，切过去调用会直接报错）
+    channel: mock
+    # ⚠️ 仅开发期：是否把验证码回显在接口响应里，前端可直接展示，省掉翻日志。
+    #    上线前必须改成 false —— 否则等于把验证码白送给调用方，验证码就失去意义。
+    mock-expose-code: true
+    # 阿里云通道参数（channel=aliyun 时才读取）。
+    # 密钥不要提交明文，建议走环境变量或配置中心。
+    aliyun:
+      access-key-id: ''
+      access-key-secret: ''
+      sign-name: ''
+      template-code: ''
+  auth:
+    # 手机号注册时自动绑定的角色（role_key）。
+    # 留空 = 不绑角色，不推荐：新用户登录后看不到任何菜单。
+    register-role-key: student
+
 # 开发环境配置
 server:
   # 服务器的HTTP端口，默认为8080

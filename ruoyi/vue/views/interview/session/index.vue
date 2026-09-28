@@ -1,6 +1,11 @@
 <template>
   <div class="app-container">
-    <el-form :model="queryParams" ref="queryRef" :inline="true" v-show="showSearch" label-width="80px">
+    <!-- 作答 / 回顾模式：带 ?sessionId= 进来。
+         入口有三个 —— 列表里点「继续作答」、首页「继续面试」、开始面试建场后自动进入。 -->
+    <session-answer v-if="sessionId" :session-id="sessionId" @back="handleBackToList" />
+
+    <!-- 列表模式：不带 ?sessionId= 时显示场次列表 -->
+    <el-form :model="queryParams" ref="queryRef" :inline="true" v-if="listMode" v-show="showSearch" label-width="80px">
       <el-form-item label="岗位名称" prop="jobName">
         <el-input
           v-model="queryParams.jobName"
@@ -25,7 +30,7 @@
       </el-form-item>
     </el-form>
 
-    <el-row :gutter="10" class="mb8">
+    <el-row :gutter="10" class="mb8" v-if="listMode">
       <el-col :span="1.5">
         <el-button
           type="primary"
@@ -47,10 +52,10 @@
       <right-toolbar v-model:showSearch="showSearch" @queryTable="getList"></right-toolbar>
     </el-row>
 
-    <el-table v-loading="loading" :data="sessionList">
+    <el-table v-loading="loading" :data="sessionList" v-if="listMode">
       <el-table-column label="场次编号" align="center" width="200">
         <template #default="scope">
-          <el-link type="primary" :underline="false" @click="handleView(scope.row)">
+          <el-link type="primary" underline="never" @click="handleView(scope.row)">
             {{ scope.row.sessionNo }}
           </el-link>
         </template>
@@ -129,6 +134,7 @@
     </el-table>
 
     <pagination
+      v-if="listMode"
       v-show="total>0"
       :total="total"
       v-model:page="queryParams.pageNum"
@@ -194,9 +200,11 @@
 import { listSession, delSession, addSession } from "@/api/interview/session"
 import { listJobprofile } from "@/api/interview/jobprofile"
 import SessionViewDrawer from "./view"
+import SessionAnswer from "./answer"
 
 const { proxy } = getCurrentInstance()
 const router = useRouter()
+const route = useRoute()
 const {
   interview_session_status,
   interview_question_type,
@@ -211,6 +219,10 @@ const {
 
 /** 未开始 / 进行中的场次都可以继续作答 */
 const ONGOING_STATUS = ['0', '1']
+
+/** 本页双模式：带 ?sessionId= 显示作答 / 回顾面板，不带则显示场次列表 */
+const sessionId = computed(() => route.query.sessionId)
+const listMode = computed(() => !sessionId.value)
 
 const sessionList = ref([])
 const loading = ref(true)
@@ -311,9 +323,9 @@ function handleView(row) {
   proxy.$refs["sessionViewRef"].open(row.id)
 }
 
-/** 继续作答：带 sessionId 下钻到作答页 */
+/** 继续作答：带 sessionId 切到本页的作答模式 */
 function handleAnswer(row) {
-  router.push({ path: '/student/qa', query: { sessionId: row.id } })
+  router.push({ path: '/student/session', query: { sessionId: row.id } })
 }
 
 /** 查看报告：带 sessionId 下钻到复盘报告页 */
@@ -324,6 +336,11 @@ function handleReport(row) {
 /** 回顾题目：带 sessionId 下钻到题目回顾页 */
 function handleReview(row) {
   router.push({ path: '/student/question', query: { sessionId: row.id } })
+}
+
+/** 从作答 / 回顾面板返回场次列表（清掉 query，回到列表模式） */
+function handleBackToList() {
+  router.replace({ path: '/student/session' })
 }
 
 /** 打开「开始面试」对话框 */
@@ -363,9 +380,9 @@ function submitStart() {
       startOpen.value = false
       proxy.$modal.msgSuccess('面试已开始，本场共 ' + (created.totalCount || 0) + ' 题')
       getList()
-      // S1 遗留：建完场次直接进作答页，把 sessionId 带过去
+      // 建完场次直接切到作答模式，把 sessionId 带过去
       if (created.id) {
-        router.push({ path: '/student/qa', query: { sessionId: created.id } })
+        router.push({ path: '/student/session', query: { sessionId: created.id } })
       }
     }).finally(() => {
       starting.value = false
@@ -390,7 +407,22 @@ function handleExport() {
   }, `session_${new Date().getTime()}.xlsx`)
 }
 
-getList()
+// 只有列表模式才需要拉场次列表；作答模式下由作答面板自己加载
+if (listMode.value) {
+  getList()
+}
+
+// 首页「开始面试」带 ?start=1 进来时，直接弹开「开始面试」对话框（= 一键进入岗位选择）
+if (route.query.start === '1') {
+  nextTick(() => handleStart())
+}
+
+// 从作答模式返回列表（路由 query 变回空）时刷新列表，让进度 / 状态是最新的
+watch(sessionId, (val) => {
+  if (!val) {
+    getList()
+  }
+})
 </script>
 
 <style scoped>

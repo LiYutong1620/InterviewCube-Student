@@ -1,7 +1,7 @@
 # sql/ 与 ruoyi/ 下的 SQL 使用说明
 
 > 本仓库的 SQL 分**可执行脚本**与**设计资料**两类。前者有严格执行顺序，后者仅供查阅。
-> 维护人：tong　最后更新：2026-09-22
+> 维护人：tong　最后更新：2026-09-28
 
 ---
 
@@ -10,19 +10,20 @@
 | 类型 | 文件 | 能否执行 | 说明 |
 | :--- | :--- | :--- | :--- |
 | **① 可执行脚本**（权威） | `RuoYi-Vue/sql/ry_20260417.sql`、`RuoYi-Vue/sql/quartz.sql` | ✅ | 若依官方基础库，建 `sys_*` / `gen_*` / `qrtz_*`。**别改**，但要**先跑**（前置） |
-| | **`sql/student_init.sql`** | ✅ **一键重建** | **学生端全部内容**：8 张业务表 + 50 条菜单 + 角色与账号 + 13 个字典类型 + 26 道演示题。**跑完这一个文件，库就完整可用。** ⚠️ 第 1 节含 `DROP TABLE`，会清空这 8 张表 |
-| | `sql/student_patch.sql` | ⚠️ 旧库补丁 | **只在已建过库、不想重建时用**：第 1 节改列注释、第 2 节角色去重。一般不需要 |
+| | **`sql/student_init.sql`** | ✅ **一键重建** | **学生端全部内容**：8 张业务表 + 50 条菜单 + 角色与账号 + 13 个字典类型 + 26 道演示题 + 运行时配置。**跑完这一个文件，库就完整可用。** ⚠️ 第 1 节含 `DROP TABLE`，会清空这 8 张表 |
+| | `sql/student_patch.sql` | ⚠️ 旧库补丁 | **只在已建过库、不想重建时用**（**5 节**）：第 1 节改列注释、第 2 节角色去重、第 3 节修「学生档案」菜单的 `route_name`（不修会导致点右上角头像「个人中心」404）、第 4 节打开注册开关、第 5 节把「面试问答」菜单并入「面试环节」（含把 `interview:qa:list` 降级成 F 型按钮补回来）。一般不需要 |
 | **② 已被吸收的源文件**（留档，不要单独跑） | `sql/student.sql`、`student_menu.sql`、`student_role_user.sql`、`student_dict.sql`、`student_question_bank_seed.sql` | — | 已被 `sql/student_init.sql` 的第 1~5 节吸收，各自头部有 banner 指向对应节 |
-| | `sql/alter_column_comment_to_code.sql`、`sql/cleanup_student_role_dup.sql` | — | 已被 `sql/student_patch.sql` 的第 1~2 节吸收 |
+| | `sql/alter_column_comment_to_code.sql`、`sql/cleanup_student_role_dup.sql`、`sql/student_route_name_fix.sql`、`sql/student_qa_merge_menu.sql` | — | 已被 `sql/student_patch.sql` 的第 1~3、5 节吸收（`student_qa_merge_menu.sql` 同时是 `student_init.sql` 第 2 节末尾的「迁移」段） |
+| | `sql/student_auth_config.sql` | — | 同一个文件同时是 `sql/student_init.sql` 第 6 节与 `sql/student_patch.sql` 第 4 节（两个产物都要用到它） |
 | | `ruoyi/*Menu.sql`（8 个）、`ruoyi/dataScopePermiMenu.sql` | — | 生成器产出留档，已被 `student_menu.sql` → `student_init.sql` 第 2 节吸收 |
 | **③ 设计资料** | `sql/实体与表.xlsx`、`sql/代码生成器配置表.xlsx` | — | 不是 SQL，仅供查阅 |
 
 一句话记法：
 
-- **`sql/student_init.sql`** = **跑这一个就够了**（从零重建学生端全部内容，文件内已排好 5 节顺序）
+- **`sql/student_init.sql`** = **跑这一个就够了**（从零重建学生端全部内容，文件内已排好 6 节顺序）
 - `sql/student_patch.sql` = **旧库补丁**（已建过库、不想重建时才用）
 - `RuoYi-Vue/sql/*.sql` = **若依官方的**，别改，但必须先跑（前置）
-- `sql/` 下其余 7 个 + `ruoyi/` 下 9 个 = **已被上面两个吸收的源文件**，保留留档，**不要单独跑**
+- `sql/` 下其余 10 个 + `ruoyi/` 下 9 个 = **已被上面两个吸收的源文件**，保留留档，**不要单独跑**
 
 ---
 
@@ -36,22 +37,26 @@
 | 2 | `RuoYi-Vue/sql/quartz.sql` | 建定时任务表 `qrtz_*` |
 | 3 | **`sql/student_init.sql`** | **学生端全部内容** —— 建表 → 菜单 → 角色账号 → 字典 → 演示数据，文件内已排好顺序 |
 
-就这三步。第 3 步虽然是一个文件，但内部是 **5 节**，顺序已经排好：
+就这三步。第 3 步虽然是一个文件，但内部是 **6 节**，顺序已经排好：
 
 | 节 | 内容 | 幂等 | 依赖 |
 | :-- | :--- | :--- | :--- |
 | 第 1 节 | 8 张业务表（`DROP + CREATE`） | ❌ **会清空这 8 张表** | 第 1 步基础库 |
-| 第 2 节 | 学生端 50 条菜单 + `interview:data:all` 权限点 | ✅ | 基础库的 `sys_menu` |
+| 第 2 节 | 学生端 50 条菜单（1 目录 + 7 模块菜单 + 41 按钮）+ `interview:data:all` 权限点 | ✅ | 基础库的 `sys_menu` |
 | 第 3 节 | 「学生」角色 + `student01` / `student02` + 菜单绑定 | ✅ | **必须在第 2 节之后** |
 | 第 4 节 | 13 个业务字典类型 + 45 条数据 | ✅ | 基础库的 `sys_dict_type` |
 | 第 5 节 | 26 道题库演示题（可选） | ✅ | 第 1 节的 `question_bank` 表 |
+| 第 6 节 | 运行时配置：打开 `sys.account.registerUser`（手机号验证码注册要用） | ✅ | 基础库的 `sys_config` |
 
 > **不需要演示数据**？把第 5 节整段注释掉即可 —— 它只影响本地能不能看到题库列表内容，不影响其他功能。
 
 **为什么合并**（2026-09-22）：
 
-学生端原先有 7 个脚本要按序跑，现在只剩 1 个。合并是**逐节提取**做的，不是重打：
-`student_init.sql` 的 5 节内容与 5 个源文件**逐字一致**（有脚本按节比对），源文件保留未删（各自头部有 banner 指向对应节）。
+学生端原先有 9 个脚本要按序跑，现在只剩 1 个（`student_init.sql`）。合并是**逐节提取**做的，不是重打：
+`student_init.sql` 的 6 节内容与 6 个源文件**逐字一致**（生成器 `.workbuddy-ai/tmp/merge_sql_further.py` 会按节比对），源文件保留未删（各自头部有 banner 指向对应节）。
+
+> ⚠️ **产物是生成物，不要直接手改。**
+> 2026-09-28 发现一次事故隐患：「路由名修正」那一节当初是**直接手改进产物**的，源文件不存在 —— 生成器与产物已经不同步，重跑生成器会把那一节弄丢。本次已把它抽回 `sql/student_route_name_fix.sql`，并新增 `sql/student_auth_config.sql`，**生成器重新成为唯一权威**。要改内容请改源文件再重跑生成器。
 
 > **实测记录**：在临时库上跑「基础库 + `student_init.sql`」，退出码 0、零报错；
 > 再跑第二遍验证幂等 —— `sys_menu` / `sys_dict_type` / `question_bank` / `sys_role_menu` 行数**零变化**。
@@ -61,12 +66,15 @@
 | 指标 | 预期值 | 含义 |
 | :--- | :--- | :--- |
 | `table_cnt` | **8** | 8 张业务表都在 |
-| `menu_cnt` | **49** | 1 个目录 + 8 个模块菜单 + 40 个按钮（不含 `data:all`） |
+| `menu_cnt` | **49** | 1 个目录 + 7 个模块菜单 + 41 个按钮（不含 `data:all`）。**2026-09-28「面试问答」不再有独立模块菜单，但模块菜单 8 → 7、按钮 40 → 41（`:list` 降级成按钮），总数守恒仍是 49** |
 | `user_cnt` | **2** | student01、student02 |
-| `role_menu_cnt` | **49** | 「学生」角色的菜单绑定数 |
+| `role_menu_cnt` | **49** | 「学生」角色的菜单绑定数（跟随菜单树，保持 49） |
 | `data_all_bound` | **0** | `interview:data:all` 没有被误绑给「学生」角色 |
+| `legacy_qa_menu_cnt` | **0** | 已无 **C 型**「面试问答」模块菜单（查询必须带 `menu_type = 'C'` —— 修复后 `:list` 本身是一条 F 型按钮，不带限定会数成 1） |
+| `qa_permi_cnt` | **6** | `interview:qa:*` 权限点一个不少（全部 F 型，挂在「面试环节」下，**含 `:list`**） |
 | `dict_type_cnt` / `dict_data_cnt` | **13 / 45** | 业务字典 |
 | `bank_cnt` | **26** | 题库演示题（第 5 节没跑就是 0，不影响功能） |
+| `register_enabled_cnt` | **1** | 注册开关已打开（第 6 节；手机号验证码注册要用） |
 
 > 唯一不覆盖的情形：如果某个菜单**已存在但 `parent_id` 挂错了**，脚本会跳过它、不会自动纠正。干净库重建不会出现这种情况；真遇到了手工改一行即可。
 
@@ -126,6 +134,7 @@
 | ① | 若依基础库 | `RuoYi-Vue/sql/ry_20260417.sql`、`RuoYi-Vue/sql/quartz.sql` | ✅ |
 | ②~⑤ | 学生端 8 张业务表 / 菜单+权限点 / 角色账号绑定 / 业务字典 | **`sql/student_init.sql` 的第 1~4 节**（合并成一个文件） | ✅ |
 | （附） | 题库演示数据（可选） | `sql/student_init.sql` 第 5 节 | ✅ |
+| （附） | 运行时配置（打开注册开关 `sys.account.registerUser`） | `sql/student_init.sql` 第 6 节 | ✅ |
 
 五块齐了之后，「干净库 → 能登录 → 菜单可见 → 数据隔离生效 → 下拉字典可用」这条链路就是**纯脚本、可重放**的，阶段③的合并演练可以直接用。
 
@@ -139,7 +148,7 @@
 ## 六、三端合并时的注意
 
 1. **不要合并各自的整库 dump。** 需要备份就现场导出到本地，不要提交进仓库 —— 理由见第四节。
-2. **学生端只需收集一个文件：`sql/student_init.sql`** —— 建表 + 菜单 + 角色账号 + 字典 + 演示数据都在里面，顺序也排好了。
+2. **学生端只需收集一个文件：`sql/student_init.sql`** —— 建表 + 菜单 + 角色账号 + 字典 + 演示数据 + 运行时配置都在里面，顺序也排好了。
    已在临时库实测过完整重建（8 项校验全部符合预期）与二次执行幂等。
    > 只想要「菜单」这一块的话，它在第 2 节，可以单独抠出来。
 3. 收集三端全部脚本（学生端**只有一个**），在**干净库上按顺序重跑一遍**，而不是靠「约定号段」防冲突。
